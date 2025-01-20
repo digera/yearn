@@ -36,12 +36,10 @@ public class Block
         {
             for (int i = 0; i < 3; i++)
             {
-                Raylib.DrawRectangleLines(
-                    X - i, Y - i,
-                    Size + (i * 2),
-                    Size + (i * 2),
-                    Color.Yellow
-                );
+                Raylib.DrawRectangleLines(X - i, Y - i,
+                                          Size + (i * 2),
+                                          Size + (i * 2),
+                                          Color.Yellow);
             }
         }
     }
@@ -52,10 +50,8 @@ public class Block
         float right = X + Size;
         float top = Y;
         float bottom = Y + Size;
-
         float closestX = Math.Clamp(pos.X, left, right);
         float closestY = Math.Clamp(pos.Y, top, bottom);
-
         float dx = pos.X - closestX;
         float dy = pos.Y - closestY;
         return (dx * dx + dy * dy) <= (radius * radius);
@@ -75,22 +71,19 @@ public class Projectile
         targetBlock = block;
     }
 
-    public void Update(float dt, Player player, List<Block> blocks)
+    public void Update(float dt, int miningPwr, List<Block> blocks)
     {
         if (!IsActive || targetBlock == null) return;
-
         Vector2 center = new Vector2(targetBlock.X + targetBlock.Size * 0.5f, targetBlock.Y + targetBlock.Size * 0.5f);
         Vector2 dir = center - Position;
         float dist = dir.Length();
-
         if (dist <= 5f)
         {
             IsActive = false;
-            targetBlock.Dur -= player.MiningPwr;
+            targetBlock.Dur -= miningPwr;
             if (targetBlock.Dur <= 0) blocks.Remove(targetBlock);
             return;
         }
-
         dir = Vector2.Normalize(dir);
         Position += dir * Speed * dt;
     }
@@ -100,7 +93,52 @@ public class Projectile
         if (IsActive) Raylib.DrawCircleV(Position, 4, Color.Black);
     }
 }
+public class Caravan
+{
+    private Vector2 position;
+    private float width;
+    private float height;
+    private Color color;
 
+    public Caravan(int screenWidth, int screenHeight)
+    {
+        // Make the caravan width match the screen width
+        width = screenWidth;
+        // Height should be substantial - let's say 25% of screen height
+        height = screenHeight * 0.25f;
+        // Position it at bottom of screen, half-hidden
+        position = new Vector2(0, screenHeight + height * 0.5f);
+        // Soft earthen brown color
+        color = new Color(139, 69, 19, 255); // Saddle brown
+    }
+
+    public void Update(float dt)
+    {
+        // For now, just update position if screen is resized
+        position.Y = Raylib.GetScreenHeight() + height * 0.5f;
+        width = Raylib.GetScreenWidth();
+    }
+
+    public void Draw()
+    {
+        // Draw as a large oval
+        Rectangle rect = new Rectangle(
+            position.X,
+            position.Y - height,
+            width,
+            height * 2 // Double height for proper ellipse
+        );
+
+        // Draw the ellipse
+        Raylib.DrawEllipse(
+            (int)(position.X + width / 2), // center X
+            (int)position.Y,             // center Y
+            width / 2,                     // radius X
+            height,                      // radius Y
+            color
+        );
+    }
+}
 public class Player
 {
     public Vector2 Position;
@@ -139,12 +177,18 @@ public class Player
         {
             Position = TargetPosition;
             IsMoving = false;
+            ClampToScreen();
             return;
         }
         dir = Vector2.Normalize(dir);
         Vector2 nextPos = Position + dir * Speed * dt;
-        if (!IsOverlappingAnyBlock(nextPos, blocks)) Position = nextPos;
-        else IsMoving = false;
+        if (!IsOverlappingAnyBlock(nextPos, blocks))
+            Position = nextPos;
+        else
+            IsMoving = false;
+
+        // After movement, clamp
+        ClampToScreen();
     }
 
     void UpdateState(float dt, List<Block> blocks)
@@ -154,7 +198,6 @@ public class Player
             CurrentState = PlayerState.Walking;
             return;
         }
-
         Block closest = GetClosestBlockInRange(blocks);
         if (closest != null)
         {
@@ -174,8 +217,8 @@ public class Player
 
     Block GetClosestBlockInRange(List<Block> blocks)
     {
-        Block closest = null;
         float minDist = float.MaxValue;
+        Block closest = null;
         foreach (var b in blocks)
         {
             Vector2 center = new Vector2(b.X + b.Size * 0.5f, b.Y + b.Size * 0.5f);
@@ -192,7 +235,6 @@ public class Player
     public void Draw()
     {
         Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
-
         switch (CurrentState)
         {
             case PlayerState.Idle: circleColor = Color.Red; break;
@@ -200,7 +242,6 @@ public class Player
             case PlayerState.Crafting: circleColor = Color.Blue; break;
             case PlayerState.Mining: circleColor = Color.White; break;
         }
-
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
         string st = CurrentState.ToString();
@@ -219,25 +260,163 @@ public class Player
         foreach (var b in blocks) if (b.OverlapsCircle(pos, Radius)) return true;
         return false;
     }
+
+    void ClampToScreen()
+    {
+        Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
+        Position.Y = Math.Clamp(Position.Y, Radius, Program.refHeight - Radius);
+    }
+}
+
+public enum MinerState
+{
+    MovingUp,
+    Mining
+}
+
+public class Miner
+{
+    public Vector2 Position;
+    public float Speed = 150f;
+    public float Radius = 16f;
+    public const float MINING_RANGE = 64f;
+    public int MiningPwr = 10;
+    public int invMax = 5;
+    public int invCount = 0;
+    public MinerState CurrentState { get; private set; } = MinerState.MovingUp;
+    
+
+
+    float shootTimer;
+    const float SHOOT_INTERVAL = 0.25f;
+    Color circleColor = Color.Purple;
+    Vector2 direction;
+
+    public Miner(Vector2 startPos)
+    {
+        Position = startPos;
+        float angleDegrees = Raylib.GetRandomValue(-45, 45);
+        float rad = MathF.PI * angleDegrees / 180f;
+        Vector2 baseUp = new Vector2(0, -1);
+        float sin = MathF.Sin(rad);
+        float cos = MathF.Cos(rad);
+        direction = new Vector2(baseUp.X * cos - baseUp.Y * sin,
+                                baseUp.X * sin + baseUp.Y * cos);
+    }
+
+    public void Update(float dt, List<Block> blocks)
+    {
+        switch (CurrentState)
+        {
+            case MinerState.MovingUp:
+                MoveUp(dt, blocks);
+                break;
+            case MinerState.Mining:
+                Mine(dt, blocks);
+                break;
+        }
+    }
+
+    void MoveUp(float dt, List<Block> blocks)
+    {
+        Block closest = GetClosestBlockInRange(blocks);
+        if (closest != null)
+        {
+            CurrentState = MinerState.Mining;
+            return;
+        }
+        Vector2 nextPos = Position + direction * Speed * dt;
+        if (!IsOverlappingAnyBlock(nextPos, blocks))
+            Position = nextPos;
+
+        ClampToScreen();
+    }
+
+    void Mine(float dt, List<Block> blocks)
+    {
+        Block closest = GetClosestBlockInRange(blocks);
+        if (closest == null)
+        {
+            CurrentState = MinerState.MovingUp;
+            return;
+        }
+        shootTimer += dt;
+        if (shootTimer >= SHOOT_INTERVAL)
+        {
+            shootTimer = 0f;
+            Program.projectiles.Add(new Projectile(Position, closest));
+        }
+
+        // If you'd like, you can drift or remain stationary. 
+        // For now, the miner stands still while mining, so clamp in case it was near edge
+        ClampToScreen();
+    }
+
+    Block GetClosestBlockInRange(List<Block> blocks)
+    {
+        float minDist = float.MaxValue;
+        Block closest = null;
+        foreach (var b in blocks)
+        {
+            Vector2 center = new Vector2(b.X + b.Size * 0.5f, b.Y + b.Size * 0.5f);
+            float dist = Vector2.Distance(Position, center);
+            if (dist <= MINING_RANGE && dist < minDist)
+            {
+                minDist = dist;
+                closest = b;
+            }
+        }
+        return closest;
+    }
+
+    bool IsOverlappingAnyBlock(Vector2 pos, List<Block> blocks)
+    {
+        foreach (var b in blocks)
+            if (b.OverlapsCircle(pos, Radius)) return true;
+        return false;
+    }
+
+    void ClampToScreen()
+    {
+        Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
+        Position.Y = Math.Clamp(Position.Y, Radius, Program.refHeight - Radius);
+    }
+
+    public void Draw()
+    {
+        Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
+        Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
+        string st = CurrentState.ToString();
+        Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
+        Raylib.DrawText(st, (int)(Position.X - ts.X / 2), (int)(Position.Y - Radius - 20), 20, Color.Black);
+    }
 }
 
 public class Program
 {
-    static int refWidth = 600;
-    static int refHeight = 800;
+    public static int refWidth = 600;
+    public static int refHeight = 800;
     static int blockSize = 50;
     public static List<Block> blocks = new List<Block>();
     public static List<Projectile> projectiles = new List<Projectile>();
+    public static List<Miner> miners = new List<Miner>();
+    static Caravan caravan;
     static Player player;
 
     public static void Main()
     {
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
-        Raylib.InitWindow(refWidth, refHeight, "Yearn");
+        Raylib.InitWindow(refWidth, refHeight, "Yearn with Miners");
         Raylib.SetTargetFPS(60);
 
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         player = new Player(playerStartPos);
+        caravan = new Caravan(refWidth, refHeight);
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f)));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f)));
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f)));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f)));
+
 
         int cols = refWidth / blockSize;
         int rows = (refHeight / 2 + 20 * blockSize) / blockSize;
@@ -291,8 +470,8 @@ public class Program
             }
 
             player.Update(dt, blocks);
-
-            foreach (var p in projectiles) p.Update(dt, player, blocks);
+            foreach (var m in miners) m.Update(dt, blocks);
+            foreach (var p in projectiles) p.Update(dt, player.MiningPwr, blocks);
             projectiles.RemoveAll(p => !p.IsActive);
 
             Raylib.BeginDrawing();
@@ -302,19 +481,17 @@ public class Program
             Raylib.DrawCircleV(player.TargetPosition, 5, Color.Red);
             Raylib.DrawLineV(player.Position, player.TargetPosition, Color.Red);
 
-            foreach (var block in blocks) block.Draw();
-            foreach (var proj in projectiles) proj.Draw();
-
+            foreach (var b in blocks) b.Draw();
+            foreach (var p in projectiles) p.Draw();
+            caravan.Update(dt);
+            caravan.Draw();
             player.Draw();
+            foreach (var m in miners) m.Draw();
 
             Raylib.EndMode2D();
 
             Raylib.DrawText($"Player Pos: {player.Position.X:F2}, {player.Position.Y:F2}", 10, 10, 20, Color.Black);
-            Raylib.DrawText($"Target Pos: {player.TargetPosition.X:F2}, {player.TargetPosition.Y:F2}", 10, 30, 20, Color.Black);
-            Raylib.DrawText($"State: {player.CurrentState}", 10, 50, 20, Color.Black);
-
-            Vector2 d = player.TargetPosition - player.Position;
-            Raylib.DrawText($"Distance to target: {d.Length():F2}", 10, 70, 20, Color.Black);
+            Raylib.DrawText($"Player State: {player.CurrentState}", 10, 30, 20, Color.Black);
 
             Raylib.EndDrawing();
         }
@@ -338,10 +515,8 @@ public class Program
         float zoom = Math.Min(scaleX, scaleY);
         Camera2D cam = new Camera2D { Target = new Vector2(0, 0), Offset = new Vector2(0, 0), Rotation = 0f, Zoom = zoom };
         Vector2 worldPos = Raylib.GetScreenToWorld2D(screenPos, cam);
-
         if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             Console.WriteLine($"Click at screen: {screenPos}, world: {worldPos}");
-
         return worldPos;
     }
 }
