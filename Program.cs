@@ -123,28 +123,21 @@ public class Caravan
     public float height;
     private Color color;
 
+    // Added Y property for position access
+    public float Y => position.Y;
+
     public Caravan(int screenWidth, int screenHeight)
     {
         width = screenWidth;
         height = screenHeight * 0.25f;
-        position = new Vector2(0, screenHeight - height * 0.1f);
+        position = new Vector2(0, screenHeight - height * 0.05f);
         color = new Color((byte)139, (byte)69, (byte)19, (byte)255);
     }
 
-    public void SetY(float y)
-    {
-        position.Y = y;
-    }
+    public void SetY(float y) => position.Y = y;
+    public float GetY() => position.Y;
 
-    public float GetY()
-    {
-        return position.Y;
-    }
-
-    public void Update(float dt)
-    {
-        width = Raylib.GetScreenWidth();
-    }
+    public void Update(float dt) => width = Raylib.GetScreenWidth();
 
     public void Draw()
     {
@@ -296,7 +289,7 @@ public class Player
     void ClampToScreen()
     {
         Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
-        Position.Y = Math.Clamp(Position.Y, Radius, Program.refHeight - Radius);
+       // Position.Y = Math.Clamp(Position.Y, Radius, Program.refHeight - Radius);
     }
 }
 
@@ -316,6 +309,7 @@ public class Miner
     public int MiningPwr = 20;
     public int invCount = 0;
     public int invMax = 100;
+    private Caravan caravan; // Added caravan reference
 
     public MinerState CurrentState { get; private set; } = MinerState.MovingUp;
 
@@ -324,9 +318,11 @@ public class Miner
     Color circleColor = Color.Purple;
     Vector2 direction;
 
-    public Miner(Vector2 startPos)
+    // Modified constructor to include caravan
+    public Miner(Vector2 startPos, Caravan caravan)
     {
         Position = startPos;
+        this.caravan = caravan;
         float angleDegrees = Raylib.GetRandomValue(-20, 20);
         float rad = MathF.PI * angleDegrees / 180f;
         Vector2 baseUp = new Vector2(0, -1);
@@ -396,7 +392,8 @@ public class Miner
             return;
         }
 
-        Vector2 targetPos = new Vector2(Program.refWidth / 2, Raylib.GetScreenHeight() + Radius);
+        // Updated target position using caravan.Y
+        Vector2 targetPos = new Vector2(Program.refWidth / 2, caravan.Y);
         Vector2 dir = targetPos - Position;
         dir = Vector2.Normalize(dir);
         Position += dir * Speed * dt;
@@ -404,8 +401,8 @@ public class Miner
 
     bool IsOverlappingCaravan()
     {
-        float caravanTopY = Raylib.GetScreenHeight();
-        return Position.Y >= caravanTopY - Radius;
+        // Updated collision check with caravan's Y position
+        return Position.Y >= caravan.Y - Radius;
     }
 
     public void UpdateInventory(Block block)
@@ -444,7 +441,7 @@ public class Miner
     void ClampToScreen()
     {
         Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
-        Position.Y = Math.Clamp(Position.Y, Radius, Program.refHeight - Radius);
+        // Position.Y = Math.Clamp(Position.Y, Radius, Program.refHeight - Radius);
     }
 
     public void Draw()
@@ -483,7 +480,7 @@ public class Program
 
     public static void Main()
     {
-        Raylib.InitWindow(refWidth, refHeight, "Caravan At Bottom");
+        Raylib.InitWindow(refWidth, refHeight, "Yearn");
         Raylib.SetTargetFPS(60);
 
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
@@ -502,12 +499,12 @@ public class Program
         caravanY = caravan.GetY();
 
         // Initialize miners
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f)));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f)));
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f)));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f)));
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f)));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f)));
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan));
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan));
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan));
 
         // Initialize blocks
         int cols = refWidth / blockSize;
@@ -534,6 +531,11 @@ public class Program
             float dt = Raylib.GetFrameTime();
 
             // Handle input
+            if (Raylib.IsKeyPressed(KeyboardKey.E))
+            {
+                Console.WriteLine("keyboard button E pressed");
+                miners.Add(new Miner(GetMouseWorld(), caravan));
+            }
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
                 Vector2 mouseWorld = GetMousePositionRef();
@@ -603,6 +605,12 @@ public class Program
         Raylib.CloseWindow();
     }
 
+    static Vector2 GetMouseWorld()
+    {
+        Vector2 screenMouse = Raylib.GetMousePosition();
+        return Raylib.GetScreenToWorld2D(screenMouse, camera);
+    }
+
     static void UpdateCamera(float dt)
     {
         float smoothSpeed = 5f * dt; // Adjusted for delta time
@@ -616,7 +624,7 @@ public class Program
 
         // Clamp desired position
         desiredPosition.X = Math.Clamp(desiredPosition.X, minX, maxX);
-        desiredPosition.Y = Math.Clamp(desiredPosition.Y, maxY, minY);
+       // desiredPosition.Y = Math.Clamp(desiredPosition.Y, maxY, minY);
 
         // Smooth camera movement
         camera.Target = Vector2.Lerp(camera.Target, desiredPosition, smoothSpeed);
