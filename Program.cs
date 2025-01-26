@@ -12,14 +12,21 @@ public enum PlayerState
     Riding
 }
 
+public enum MinerState
+{
+    MovingUp,
+    Mining,
+    Returning
+}
+
 public class Block
 {
     public int X;
     public int Y;
     public int Size;
     public int Dur = 100;
-    public int Yield = 50;
-    public string Mat = "stone";
+    public int Yield = 1;
+    public string Mat = "earth";
     public Color Color;
 
     public Block(int x, int y, int size, Color color)
@@ -62,58 +69,19 @@ public class Block
     }
 }
 
-public class Projectile
+public struct PickaxeStats
 {
-    public Vector2 Position;
-    public bool IsActive = true;
-    float Speed = 300f;
-    Block targetBlock;
-    Miner owner;
+    public float Speed;
+    public float Size;
+    public int MiningPower;
+    public Color Color;
 
-    public Projectile(Vector2 startPos, Block block, Miner owner = null)
+    public PickaxeStats(float speed = 300f, float size = 4f, int miningPower = 1, Color? color = null)
     {
-        Position = startPos;
-        targetBlock = block;
-        this.owner = owner;
-    }
-
-    public void Update(float dt, int miningPwr, List<Block> blocks)
-    {
-        if (!IsActive || targetBlock == null) return;
-
-        Vector2 center = new Vector2(
-            targetBlock.X + targetBlock.Size * 0.5f,
-            targetBlock.Y + targetBlock.Size * 0.5f
-        );
-        Vector2 dir = center - Position;
-        float dist = dir.Length();
-
-        if (dist <= 5f)
-        {
-            IsActive = false;
-            targetBlock.Dur -= miningPwr;
-            if (targetBlock.Dur <= 0)
-            {
-                if (owner != null)
-                {
-                    owner.UpdateInventory(targetBlock);
-                }
-                else
-                {
-                    Program.GlobalScore += targetBlock.Yield;
-                }
-                blocks.Remove(targetBlock);
-            }
-            return;
-        }
-
-        dir = Vector2.Normalize(dir);
-        Position += dir * Speed * dt;
-    }
-
-    public void Draw()
-    {
-        if (IsActive) Raylib.DrawCircleV(Position, 4, Color.Black);
+        Speed = speed;
+        Size = size;
+        MiningPower = miningPower;
+        Color = color ?? Color.Black;
     }
 }
 
@@ -124,7 +92,6 @@ public class Caravan
     public float height;
     private Color color;
 
-    // Added Y property for position access
     public float Y => position.Y;
 
     public Caravan(int screenWidth, int screenHeight)
@@ -159,114 +126,110 @@ public class Player
     public float Speed = 200f;
     public float Radius = 16f;
     public const float MINING_RANGE = 64f;
-    public int MiningPwr = 10;
-
     public PlayerState CurrentState { get; private set; } = PlayerState.Idle;
     public bool IsMoving = false;
 
-    float shootTimer;
-    const float SHOOT_INTERVAL = 0.25f;
-    Color circleColor = Color.Red;
-    const float STOP_DISTANCE = 5f;
+    private PickaxeStats pickaxeStats;
+    private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
+    private float pickaxeTimer;
+    private const float PICKAXE_INTERVAL = 0.25f;
+    private Caravan caravan;
 
     public Player(Vector2 startPos, Caravan caravan)
     {
         Position = startPos;
         TargetPosition = startPos;
         this.caravan = caravan;
+        pickaxeStats = new PickaxeStats(
+            speed: 300f,
+            size: 4f,
+            miningPower: 2,
+            color: Color.Red
+        );
     }
-    private Caravan caravan;
 
     public void Update(float dt, List<Block> blocks)
     {
         UpdateMovement(dt, blocks);
         UpdateState(dt, blocks);
+        UpdatePickaxes(dt, blocks);
+
         if (Position.Y >= caravan.Y && CurrentState != PlayerState.Riding)
         {
-            CurrentState= PlayerState.Riding;
+            CurrentState = PlayerState.Riding;
             Position = new Vector2(Position.X, caravan.Y);
         }
     }
 
-    void UpdateMovement(float dt, List<Block> blocks)
+    private void UpdatePickaxes(float dt, List<Block> blocks)
     {
-        if (!IsMoving) return;
-        Vector2 dir = TargetPosition - Position;
-        float dist = dir.Length();
-        if (dist <= STOP_DISTANCE)
+        for (int i = activePickaxes.Count - 1; i >= 0; i--)
         {
-            Position = TargetPosition;
-            IsMoving = false;
-            ClampToScreen();
-            return;
-        }
+            var (pos, target) = activePickaxes[i];
 
-        dir = Vector2.Normalize(dir);
-        Vector2 nextPos = Position + dir * Speed * dt;
-        if (!IsOverlappingAnyBlock(nextPos, blocks))
-            Position = nextPos;
-        else
-            IsMoving = false;
-
-        ClampToScreen();
-    }
-
-    void UpdateState(float dt, List<Block> blocks)
-    {
-        if (IsMoving)
-        {
-            CurrentState = PlayerState.Walking;
-            return;
-        }
-
-        Block closest = GetClosestBlockInRange(blocks);
-        if (closest != null)
-        {
-            CurrentState = PlayerState.Mining;
-            shootTimer += dt;
-            if (shootTimer >= SHOOT_INTERVAL)
+            if (!blocks.Contains(target))
             {
-                shootTimer = 0f;
-                Program.projectiles.Add(new Projectile(Position, closest, null));
+                activePickaxes.RemoveAt(i);
+                continue;
+            }
+
+            Vector2 targetCenter = new Vector2(
+                target.X + target.Size * 0.5f,
+                target.Y + target.Size * 0.5f
+            );
+
+            Vector2 dir = Vector2.Normalize(targetCenter - pos);
+            Vector2 newPos = pos + dir * pickaxeStats.Speed * dt;
+
+            float dist = Vector2.Distance(newPos, targetCenter);
+            if (dist <= 5f)
+            {
+                target.Dur -= pickaxeStats.MiningPower;
+                if (target.Dur <= 0)
+                {
+                    Program.GlobalScore += target.Yield;
+                    blocks.Remove(target);
+                }
+                activePickaxes.RemoveAt(i);
+            }
+            else
+            {
+                activePickaxes[i] = (newPos, target);
             }
         }
-        else
-        {
-            if (CurrentState != PlayerState.Crafting)
-                CurrentState = PlayerState.Idle;
-        }
-    }
 
-    Block GetClosestBlockInRange(List<Block> blocks)
-    {
-        float minDist = float.MaxValue;
-        Block closest = null;
-        foreach (var b in blocks)
+        if (CurrentState == PlayerState.Mining)
         {
-            Vector2 center = new Vector2(b.X + b.Size * 0.5f, b.Y + b.Size * 0.5f);
-            float dist = Vector2.Distance(Position, center);
-            if (dist <= MINING_RANGE && dist < minDist)
+            pickaxeTimer += dt;
+            if (pickaxeTimer >= PICKAXE_INTERVAL)
             {
-                minDist = dist;
-                closest = b;
+                pickaxeTimer = 0f;
+                Block target = GetClosestBlockInRange(blocks);
+                if (target != null)
+                {
+                    activePickaxes.Add((Position, target));
+                }
             }
         }
-        return closest;
     }
 
     public void Draw()
     {
+        foreach (var (pos, _) in activePickaxes)
+        {
+            Raylib.DrawCircleV(pos, pickaxeStats.Size, pickaxeStats.Color);
+        }
+
         Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
 
-        switch (CurrentState)
+        Color circleColor = CurrentState switch
         {
-            case PlayerState.Idle: circleColor = Color.Red; break;
-            case PlayerState.Walking: circleColor = Color.Green; break;
-            case PlayerState.Crafting: circleColor = Color.Blue; break;
-            case PlayerState.Mining:
-                circleColor = Color.Orange;
-                break;
-        }
+            PlayerState.Idle => Color.Red,
+            PlayerState.Walking => Color.Green,
+            PlayerState.Crafting => Color.Blue,
+            PlayerState.Mining => Color.Orange,
+            _ => Color.Red
+        };
 
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
@@ -287,24 +250,77 @@ public class Player
         IsMoving = true;
     }
 
-    bool IsOverlappingAnyBlock(Vector2 pos, List<Block> blocks)
+    private void UpdateMovement(float dt, List<Block> blocks)
+    {
+        if (!IsMoving) return;
+        Vector2 dir = TargetPosition - Position;
+        float dist = dir.Length();
+        if (dist <= 5f)
+        {
+            Position = TargetPosition;
+            IsMoving = false;
+            ClampToScreen();
+            return;
+        }
+
+        dir = Vector2.Normalize(dir);
+        Vector2 nextPos = Position + dir * Speed * dt;
+        if (!IsOverlappingAnyBlock(nextPos, blocks))
+            Position = nextPos;
+        else
+            IsMoving = false;
+
+        ClampToScreen();
+    }
+
+    private void UpdateState(float dt, List<Block> blocks)
+    {
+        if (IsMoving)
+        {
+            CurrentState = PlayerState.Walking;
+            return;
+        }
+
+        Block closest = GetClosestBlockInRange(blocks);
+        if (closest != null)
+        {
+            CurrentState = PlayerState.Mining;
+        }
+        else
+        {
+            if (CurrentState != PlayerState.Crafting)
+                CurrentState = PlayerState.Idle;
+        }
+    }
+
+    private Block GetClosestBlockInRange(List<Block> blocks)
+    {
+        float minDist = float.MaxValue;
+        Block closest = null;
+        foreach (var b in blocks)
+        {
+            Vector2 center = new Vector2(b.X + b.Size * 0.5f, b.Y + b.Size * 0.5f);
+            float dist = Vector2.Distance(Position, center);
+            if (dist <= MINING_RANGE && dist < minDist)
+            {
+                minDist = dist;
+                closest = b;
+            }
+        }
+        return closest;
+    }
+
+    private bool IsOverlappingAnyBlock(Vector2 pos, List<Block> blocks)
     {
         foreach (var b in blocks)
             if (b.OverlapsCircle(pos, Radius)) return true;
         return false;
     }
 
-    void ClampToScreen()
+    private void ClampToScreen()
     {
         Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
     }
-}
-
-public enum MinerState
-{
-    MovingUp,
-    Mining,
-    Returning
 }
 
 public class Miner
@@ -313,25 +329,32 @@ public class Miner
     public float Speed = 150f;
     public float Radius = 16f;
     public const float MINING_RANGE = 64f;
-    public int MiningPwr = 20;
     public int invCount = 0;
-    public int invMax = 100;
+    public int invMax = 10;
     private float attn = 0;
     private const float attnSpan = 2.0f;
     private Random random = new Random();
     private Caravan caravan;
+    private Vector2 direction;
+    private Color circleColor = Color.Purple;
 
     public MinerState CurrentState { get; private set; } = MinerState.MovingUp;
 
-    float shootTimer;
-    const float SHOOT_INTERVAL = 0.25f;
-    Color circleColor = Color.Purple;
-    Vector2 direction;
+    private PickaxeStats pickaxeStats;
+    private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
+    private float pickaxeTimer;
+    private const float PICKAXE_INTERVAL = 0.25f;
 
     public Miner(Vector2 startPos, Caravan caravan)
     {
         Position = startPos;
         this.caravan = caravan;
+        pickaxeStats = new PickaxeStats(
+            speed: 250f,
+            size: 3f,
+            miningPower: 1,
+            color: Color.Purple
+        );
 
         float angleRadians = (-90 + Raylib.GetRandomValue(-60, 60)) * MathF.PI / 180f;
         direction = new Vector2(MathF.Cos(angleRadians), MathF.Sin(angleRadians));
@@ -362,9 +385,63 @@ public class Miner
                 ReturnToCaravan(dt);
                 break;
         }
+
+        UpdatePickaxes(dt, blocks);
     }
 
-    void MoveUp(float dt, List<Block> blocks)
+    private void UpdatePickaxes(float dt, List<Block> blocks)
+    {
+        for (int i = activePickaxes.Count - 1; i >= 0; i--)
+        {
+            var (pos, target) = activePickaxes[i];
+
+            if (!blocks.Contains(target))
+            {
+                activePickaxes.RemoveAt(i);
+                continue;
+            }
+
+            Vector2 targetCenter = new Vector2(
+                target.X + target.Size * 0.5f,
+                target.Y + target.Size * 0.5f
+            );
+
+            Vector2 dir = Vector2.Normalize(targetCenter - pos);
+            Vector2 newPos = pos + dir * pickaxeStats.Speed * dt;
+
+            float dist = Vector2.Distance(newPos, targetCenter);
+            if (dist <= 5f)
+            {
+                target.Dur -= pickaxeStats.MiningPower;
+                if (target.Dur <= 0)
+                {
+                    UpdateInventory(target);
+                    blocks.Remove(target);
+                }
+                activePickaxes.RemoveAt(i);
+            }
+            else
+            {
+                activePickaxes[i] = (newPos, target);
+            }
+        }
+
+        if (CurrentState == MinerState.Mining)
+        {
+            pickaxeTimer += dt;
+            if (pickaxeTimer >= PICKAXE_INTERVAL)
+            {
+                pickaxeTimer = 0f;
+                Block target = GetClosestBlockInRange(blocks);
+                if (target != null)
+                {
+                    activePickaxes.Add((Position, target));
+                }
+            }
+        }
+    }
+
+    private void MoveUp(float dt, List<Block> blocks)
     {
         Block closest = GetClosestBlockInRange(blocks);
 
@@ -385,7 +462,7 @@ public class Miner
         ClampToScreen();
     }
 
-    void Mine(float dt, List<Block> blocks)
+    private void Mine(float dt, List<Block> blocks)
     {
         Block closest = GetClosestBlockInRange(blocks);
         if (closest == null)
@@ -393,16 +470,9 @@ public class Miner
             CurrentState = MinerState.MovingUp;
             return;
         }
-        shootTimer += dt;
-        if (shootTimer >= SHOOT_INTERVAL)
-        {
-            shootTimer = 0f;
-            Program.projectiles.Add(new Projectile(Position, closest, this));
-        }
-        ClampToScreen();
     }
 
-    void ReturnToCaravan(float dt)
+    private void ReturnToCaravan(float dt)
     {
         if (IsOverlappingCaravan())
         {
@@ -418,7 +488,7 @@ public class Miner
         Position += dir * Speed * dt;
     }
 
-    bool IsOverlappingCaravan()
+    private bool IsOverlappingCaravan()
     {
         return Position.Y >= caravan.Y - Radius;
     }
@@ -432,7 +502,7 @@ public class Miner
         }
     }
 
-    Block GetClosestBlockInRange(List<Block> blocks)
+    private Block GetClosestBlockInRange(List<Block> blocks)
     {
         float minDist = float.MaxValue;
         Block closest = null;
@@ -449,20 +519,25 @@ public class Miner
         return closest;
     }
 
-    bool IsOverlappingAnyBlock(Vector2 pos, List<Block> blocks)
+    private bool IsOverlappingAnyBlock(Vector2 pos, List<Block> blocks)
     {
         foreach (var b in blocks)
             if (b.OverlapsCircle(pos, Radius)) return true;
         return false;
     }
 
-    void ClampToScreen()
+    private void ClampToScreen()
     {
         Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
     }
 
     public void Draw()
     {
+        foreach (var (pos, _) in activePickaxes)
+        {
+            Raylib.DrawCircleV(pos, pickaxeStats.Size, pickaxeStats.Color);
+        }
+
         Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
@@ -489,27 +564,24 @@ public class Program
     static byte lastBaseBlue = 100;
 
     public static List<Block> blocks = new List<Block>();
-    public static List<Projectile> projectiles = new List<Projectile>();
-    public static List<Miner> miners = new List<Miner>();
     static Caravan caravan;
     static Player player;
     static Camera2D camera;
     public static int GlobalScore = 0;
     static float caravanY;
-    static float caravanSpeed = 20f;
+    static float caravanSpeed = 40f;
     static float distanceThreshold = 150f;
+    public static List<Miner> miners = new List<Miner>();
 
     public static void Main()
     {
         Raylib.InitWindow(refWidth, refHeight, "Yearn");
         Raylib.SetTargetFPS(60);
-        
 
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
         player = new Player(playerStartPos, caravan);
 
-        // Initialize camera
         camera = new Camera2D
         {
             Target = playerStartPos,
@@ -518,7 +590,6 @@ public class Program
             Zoom = 1f
         };
 
-        
         caravanY = caravan.GetY();
 
         miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan));
@@ -555,10 +626,9 @@ public class Program
         {
             float dt = Raylib.GetFrameTime();
 
-            // Handle input
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
-                Console.WriteLine("keyboard button E pressed");
+                //Console.WriteLine("keyboard button E pressed");
                 miners.Add(new Miner(GetMouseWorld(), caravan));
             }
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
@@ -577,8 +647,6 @@ public class Program
                     }
                 }
 
-
-
                 if (!blockClicked) player.SetTarget(mouseWorld);
             }
             if (blocks.Count < 300)
@@ -587,8 +655,6 @@ public class Program
             }
             player.Update(dt, blocks);
             foreach (var m in miners) m.Update(dt, blocks);
-            foreach (var p in projectiles) p.Update(dt, player.MiningPwr, blocks);
-            projectiles.RemoveAll(p => !p.IsActive);
 
             MoveCaravanUpIfNeeded(dt);
             caravan.Update(dt);
@@ -602,23 +668,20 @@ public class Program
             Raylib.DrawLineV(player.Position, player.TargetPosition, Color.Red);
 
             foreach (var b in blocks) b.Draw();
-            foreach (var proj in projectiles) proj.Draw();
-
             caravan.Draw();
             player.Draw();
             foreach (var m in miners) m.Draw();
 
             Raylib.EndMode2D();
 
-            // UI
             Raylib.DrawText($"Player Pos: {player.Position.X:F2}, {player.Position.Y:F2}",
                             10, 10, 20, Color.Black);
             Raylib.DrawText($"Player State: {player.CurrentState}",
                             10, 30, 20, Color.Black);
             Raylib.DrawText($"Blocks: {blocks.Count}", 10, 50, 20, Color.Black);
+            Raylib.DrawText($"Minors: {miners.Count}", 10, 70, 20, Color.Black);
 
-
-            string scoreText = $"Total Resources: {GlobalScore}";
+            string scoreText = $"Earth: {GlobalScore}";
             Vector2 scoreSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), scoreText, 30, 1);
             float screenCenterX = Raylib.GetScreenWidth() / 2f;
             Raylib.DrawText(
@@ -634,15 +697,16 @@ public class Program
 
         Raylib.CloseWindow();
     }
+
     private static void GenerateNewBlockSet()
     {
-        const int newRows = 28;  
-        const int cols = 12;     
+        const int newRows = 28;
+        const int cols = 12;
         byte baseRed = lastBaseRed;
         byte baseGreen = lastBaseGreen;
         byte baseBlue = lastBaseBlue;
 
-        float startY = nextSetStartY - blockSize; 
+        float startY = nextSetStartY - blockSize;
 
         for (int y = 0; y < newRows; y++)
         {
@@ -664,11 +728,10 @@ public class Program
             }
         }
 
-
         lastBaseRed = baseRed;
         lastBaseGreen = baseGreen;
         lastBaseBlue = baseBlue;
-        nextSetStartY = startY - (newRows - 1) * blockSize;  
+        nextSetStartY = startY - (newRows - 1) * blockSize;
     }
 
     static Vector2 GetMouseWorld()
@@ -682,12 +745,24 @@ public class Program
         float smoothSpeed = 5f * dt;
         Vector2 desiredPosition = player.Position;
 
+        // Clamp X position
         float minX = refWidth / 2;
         float maxX = refWidth / 2;
-        float minY = refHeight / 2;
-        float maxY = -blocks.Count * blockSize + refHeight / 2;
         desiredPosition.X = Math.Clamp(desiredPosition.X, minX, maxX);
+
+        // Calculate the position where half the caravan would be visible
+        float caravanHalfHeight = caravan.height;
+        float maxY = caravan.Y - caravanHalfHeight*2; // This ensures only half the caravan is visible
+
+        // Clamp Y position
+        float minY = float.MinValue; // Or set a specific upper bound if needed
+        desiredPosition.Y = Math.Min(desiredPosition.Y, maxY);
+
+        // Smooth camera movement
         camera.Target = Vector2.Lerp(camera.Target, desiredPosition, smoothSpeed);
+
+        // Final clamp to ensure camera never goes below the half-caravan point
+        camera.Target.Y = Math.Min(camera.Target.Y, maxY);
     }
 
     static void MoveCaravanUpIfNeeded(float dt)
