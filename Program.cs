@@ -357,6 +357,8 @@ public class Miner
     {
         Position = startPos;
         this.caravan = caravan;
+        this.basePwr = basePwr;
+
         pickaxeStats = new PickaxeStats(
             speed: 250f,
             size: 3f,
@@ -549,7 +551,7 @@ public class Miner
         Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
-        string st = $"{CurrentState} ({invCount}/{invMax})";
+        string st = $"{CurrentState} ({invCount}/{invMax}) Pwr:{basePwr + pickaxeStats.MiningPower}";
         Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
         Raylib.DrawText(
             st,
@@ -601,11 +603,11 @@ public class Program
         caravanY = caravan.GetY();
 
         miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)1));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)2));
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)3));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)4));
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)5));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)6));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)5));
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)10));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)15));
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)20));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)25));
 
         int cols = refWidth / blockSize;
         int rows = (refHeight / 2 + 20 * blockSize) / blockSize;
