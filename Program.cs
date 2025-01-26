@@ -21,20 +21,25 @@ public enum MinerState
 
 public class Block
 {
+    public static float currentDurabilityMultiplier = 1.0f;
+    public static int currentYieldBonus = 0;
+
     public int X;
     public int Y;
     public int Size;
-    public int Dur = 100;
-    public int Yield = 1;
+    public int Dur;
+    public int Yield;
     public string Mat = "earth";
     public Color Color;
 
-    public Block(int x, int y, int size, Color color)
+    public Block(int x, int y, int size, Color color, float durabilityMultiplier, int yieldBonus)
     {
         X = x;
         Y = y;
         Size = size;
         Color = color;
+        Dur = (int)(100 * durabilityMultiplier);
+        Yield = 1 + yieldBonus;
     }
 
     public void Draw()
@@ -134,12 +139,14 @@ public class Player
     private float pickaxeTimer;
     private const float PICKAXE_INTERVAL = 0.25f;
     private Caravan caravan;
+    private int basePwr = 20;
 
     public Player(Vector2 startPos, Caravan caravan)
     {
         Position = startPos;
         TargetPosition = startPos;
         this.caravan = caravan;
+        this.basePwr = basePwr;
         pickaxeStats = new PickaxeStats(
             speed: 300f,
             size: 4f,
@@ -184,7 +191,7 @@ public class Player
             float dist = Vector2.Distance(newPos, targetCenter);
             if (dist <= 5f)
             {
-                target.Dur -= pickaxeStats.MiningPower;
+               target.Dur -= pickaxeStats.MiningPower + basePwr;
                 if (target.Dur <= 0)
                 {
                     Program.GlobalScore += target.Yield;
@@ -336,6 +343,7 @@ public class Miner
     private Random random = new Random();
     private Caravan caravan;
     private Vector2 direction;
+    private int basePwr = 1;
     private Color circleColor = Color.Purple;
 
     public MinerState CurrentState { get; private set; } = MinerState.MovingUp;
@@ -345,7 +353,7 @@ public class Miner
     private float pickaxeTimer;
     private const float PICKAXE_INTERVAL = 0.25f;
 
-    public Miner(Vector2 startPos, Caravan caravan)
+    public Miner(Vector2 startPos, Caravan caravan, int basePwr)
     {
         Position = startPos;
         this.caravan = caravan;
@@ -412,7 +420,7 @@ public class Miner
             float dist = Vector2.Distance(newPos, targetCenter);
             if (dist <= 5f)
             {
-                target.Dur -= pickaxeStats.MiningPower;
+                target.Dur -= pickaxeStats.MiningPower + basePwr;
                 if (target.Dur <= 0)
                 {
                     UpdateInventory(target);
@@ -592,12 +600,12 @@ public class Program
 
         caravanY = caravan.GetY();
 
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan));
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan));
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan));
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)1));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)2));
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)3));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)4));
+        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)5));
+        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)6));
 
         int cols = refWidth / blockSize;
         int rows = (refHeight / 2 + 20 * blockSize) / blockSize;
@@ -614,7 +622,13 @@ public class Program
                 Color c = new Color((byte)baseRed, (byte)baseGreen, (byte)baseBlue, (byte)255);
                 int blockX = x * blockSize;
                 int blockY = (refHeight / 2) - y * blockSize;
-                blocks.Add(new Block(blockX, blockY, blockSize, c));
+                blocks.Add(new Block(
+                                blockX,
+                                blockY,
+                                blockSize,
+                                c,
+                                Block.currentDurabilityMultiplier,
+                                Block.currentYieldBonus));
             }
         }
         nextSetStartY = 400 - (rows - 1) * blockSize;
@@ -629,7 +643,7 @@ public class Program
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
                 //Console.WriteLine("keyboard button E pressed");
-                miners.Add(new Miner(GetMouseWorld(), caravan));
+                miners.Add(new Miner(GetMouseWorld(), caravan, Random.Shared.Next(1, 10)));
             }
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
@@ -708,6 +722,10 @@ public class Program
 
         float startY = nextSetStartY - blockSize;
 
+        // Increase the multipliers before generating new blocks
+        Block.currentDurabilityMultiplier *= 1.1f;
+        Block.currentYieldBonus += 1;
+
         for (int y = 0; y < newRows; y++)
         {
             for (int x = 0; x < cols; x++)
@@ -723,7 +741,9 @@ public class Program
                     blockX,
                     blockY,
                     blockSize,
-                    new Color((byte)baseRed, (byte)baseGreen, (byte)baseBlue, (byte)255)
+                    new Color((byte)baseRed, (byte)baseGreen, (byte)baseBlue, (byte)255),
+                    Block.currentDurabilityMultiplier,
+                    Block.currentYieldBonus
                 ));
             }
         }
