@@ -191,7 +191,7 @@ public class Player
             float dist = Vector2.Distance(newPos, targetCenter);
             if (dist <= 5f)
             {
-               target.Dur -= pickaxeStats.MiningPower + basePwr;
+                target.Dur -= pickaxeStats.MiningPower + basePwr;
                 if (target.Dur <= 0)
                 {
                     Program.GlobalScore += target.Yield;
@@ -723,8 +723,6 @@ public class Program
         byte baseBlue = lastBaseBlue;
 
         float startY = nextSetStartY - blockSize;
-
-        // Increase the multipliers before generating new blocks
         Block.currentDurabilityMultiplier *= 1.1f;
         Block.currentYieldBonus += 1;
 
@@ -766,24 +764,14 @@ public class Program
     {
         float smoothSpeed = 5f * dt;
         Vector2 desiredPosition = player.Position;
-
-        // Clamp X position
         float minX = refWidth / 2;
         float maxX = refWidth / 2;
         desiredPosition.X = Math.Clamp(desiredPosition.X, minX, maxX);
-
-        // Calculate the position where half the caravan would be visible
         float caravanHalfHeight = caravan.height;
-        float maxY = caravan.Y - caravanHalfHeight*2; // This ensures only half the caravan is visible
-
-        // Clamp Y position
-        float minY = float.MinValue; // Or set a specific upper bound if needed
+        float maxY = caravan.Y - caravanHalfHeight * 2; 
+        float minY = float.MinValue; 
         desiredPosition.Y = Math.Min(desiredPosition.Y, maxY);
-
-        // Smooth camera movement
         camera.Target = Vector2.Lerp(camera.Target, desiredPosition, smoothSpeed);
-
-        // Final clamp to ensure camera never goes below the half-caravan point
         camera.Target.Y = Math.Min(camera.Target.Y, maxY);
     }
 
