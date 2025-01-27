@@ -161,10 +161,10 @@ public class Player
         UpdateState(dt, blocks);
         UpdatePickaxes(dt, blocks);
 
-        if (Position.Y >= caravan.Y && CurrentState != PlayerState.Riding)
+        if (Position.Y >= caravan.Y -100 && CurrentState != PlayerState.Riding)
         {
             CurrentState = PlayerState.Riding;
-            Position = new Vector2(Position.X, caravan.Y);
+            Position = new Vector2(Position.X, caravan.Y - 100);
         }
     }
 
