@@ -76,9 +76,9 @@ public class Block
 
 public struct PickaxeStats
 {
-    public float Speed;
-    public float Size;
-    public int MiningPower;
+    public float Speed { get; set; }
+    public float Size { get; set; }
+    public int MiningPower { get; set; }
     public Color Color;
 
     public PickaxeStats(float speed = 300f, float size = 4f, int miningPower = 1, Color? color = null)
@@ -194,7 +194,7 @@ public class Player
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
                 if (target.Dur <= 0)
                 {
-                    Program.GlobalScore += target.Yield;
+                    Program.Earth += target.Yield;
                     blocks.Remove(target);
                 }
                 activePickaxes.RemoveAt(i);
@@ -343,12 +343,14 @@ public class Miner
     private Random random = new Random();
     private Caravan caravan;
     private Vector2 direction;
-    private int basePwr = 1;
+    public int basePwr { get; private set; }
     private Color circleColor = Color.Purple;
+
+
 
     public MinerState CurrentState { get; private set; } = MinerState.MovingUp;
 
-    private PickaxeStats pickaxeStats;
+    public PickaxeStats pickaxeStats;
     private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
     private float pickaxeTimer;
     private const float PICKAXE_INTERVAL = 0.25f;
@@ -358,6 +360,7 @@ public class Miner
         Position = startPos;
         this.caravan = caravan;
         this.basePwr = basePwr;
+
 
         pickaxeStats = new PickaxeStats(
             speed: 250f,
@@ -486,7 +489,7 @@ public class Miner
     {
         if (IsOverlappingCaravan())
         {
-            Program.GlobalScore += invCount;
+            Program.Earth += invCount;
             invCount = 0;
             CurrentState = MinerState.MovingUp;
             return;
@@ -572,15 +575,15 @@ public class Program
     static byte lastBaseRed = 100;
     static byte lastBaseGreen = 100;
     static byte lastBaseBlue = 100;
-
+    private static SaveSystem saveSystem = new SaveSystem();
     public static List<Block> blocks = new List<Block>();
-    static Caravan caravan;
+    public static Caravan caravan;
     static Player player;
     static Camera2D camera;
-    public static int GlobalScore = 0;
+    public static int Earth = 0;
     static float caravanY;
     static float caravanSpeed = 40f;
-    static float distanceThreshold = 150f;
+    static float distanceThreshold = 250f;
     public static List<Miner> miners = new List<Miner>();
 
     public static void Main()
@@ -601,13 +604,23 @@ public class Program
         };
 
         caravanY = caravan.GetY();
+        SaveSystem saveSystem = new SaveSystem();
 
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)1));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)5));
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)10));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)15));
-        miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)20));
-        miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)25));
+
+        if (File.Exists("gamestate.json"))
+        {
+            saveSystem.LoadGame();
+        }
+        else
+        {
+            // Default game setup
+            miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)1));
+            miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)5));
+            miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)10));
+            miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)15));
+            miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)20));
+            miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)25));
+        }
 
         int cols = refWidth / blockSize;
         int rows = (refHeight / 2 + 20 * blockSize) / blockSize;
@@ -641,10 +654,9 @@ public class Program
         while (!Raylib.WindowShouldClose())
         {
             float dt = Raylib.GetFrameTime();
-
+            saveSystem.Update(dt);
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
-                //Console.WriteLine("keyboard button E pressed");
                 miners.Add(new Miner(GetMouseWorld(), caravan, Random.Shared.Next(1, 10)));
             }
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
@@ -697,7 +709,7 @@ public class Program
             Raylib.DrawText($"Blocks: {blocks.Count}", 10, 50, 20, Color.Black);
             Raylib.DrawText($"Minors: {miners.Count}", 10, 70, 20, Color.Black);
 
-            string scoreText = $"Earth: {GlobalScore}";
+            string scoreText = $"Earth: {Earth}";
             Vector2 scoreSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), scoreText, 30, 1);
             float screenCenterX = Raylib.GetScreenWidth() / 2f;
             Raylib.DrawText(
