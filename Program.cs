@@ -255,6 +255,10 @@ public class Program
             {
                 GenerateNewBlockSet();
             }
+            if (player.Position.Y < nextSetStartY + 800)
+            {
+                GenerateNewBlockSet();
+            }
             player.Update(dt, blocks);
             foreach (var m in miners) m.Update(dt, blocks);
 
@@ -300,7 +304,7 @@ public class Program
         Raylib.CloseWindow();
     }
 
-    private static void GenerateNewBlockSet()
+    public static void GenerateNewBlockSet()
     {
         const int newRows = 28;
         const int cols = 12;
