@@ -255,7 +255,7 @@ public class Program
             {
                 GenerateNewBlockSet();
             }
-            if (player.Position.Y < nextSetStartY + 800)
+            if (player.Position.Y < nextSetStartY + 800 || miners.Any(miner => miner.Position.Y < nextSetStartY + 800))
             {
                 GenerateNewBlockSet();
             }
