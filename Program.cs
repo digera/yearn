@@ -374,7 +374,7 @@ public class Miner
     public int basePwr { get; private set; }
     private Color circleColor = Color.Purple;
 
-
+    
 
     public MinerState CurrentState { get; private set; } = MinerState.MovingUp;
 

@@ -21,12 +21,14 @@ public class GameState
         public int InvCount { get; set; }
         public int InvMax { get; set; }
         public int BasePower { get; set; }
+        public float Speed { get; set; } // Added Speed property
         public PickaxeStats PickaxeStats { get; set; }
     }
 
     public class PlayerSaveData
     {
         public int BasePower { get; set; }
+        public float Speed { get; set; } // Added Speed property
         public PickaxeStats PickaxeStats { get; set; }
     }
 }
@@ -34,7 +36,7 @@ public class GameState
 public class SaveSystem
 {
     private const string SAVE_FILE = "gamestate.json";
-    private float saveTimer = 0;
+    private float saveTimer = 0f;
     private const float SAVE_INTERVAL = 10.0f;
 
     public void Update(float dt)
@@ -43,13 +45,12 @@ public class SaveSystem
         if (saveTimer >= SAVE_INTERVAL)
         {
             SaveGame();
-            saveTimer = 0;
+            saveTimer = 0f;
         }
     }
 
     public void SaveGame()
     {
-        // Build the GameState object from your current in-game data
         var gameState = new GameState
         {
             Earth = Program.Earth,
@@ -62,6 +63,7 @@ public class SaveSystem
                 InvCount = m.invCount,
                 InvMax = m.invMax,
                 BasePower = m.basePwr,
+                Speed = m.Speed, // Save the miner's speed
                 PickaxeStats = m.pickaxeStats
             }).ToList(),
 
@@ -69,6 +71,7 @@ public class SaveSystem
             Player = new GameState.PlayerSaveData
             {
                 BasePower = Program.player != null ? Program.player.basePwr : 0,
+                Speed = Program.player != null ? Program.player.Speed : 200f, // Save the player’s speed
                 PickaxeStats = Program.player != null ? Program.player.GetPickaxeStats() : new PickaxeStats()
             }
         };
@@ -102,15 +105,20 @@ public class SaveSystem
         {
             foreach (var minerState in gameState.Miners)
             {
-                // Create each miner near the caravan, or however you want to place them
+                // Create each miner near the caravan (or however you like).
+                // For example, alternating between x=30% and x=70% of screen:
                 float xOffset = Program.refWidth * (Program.miners.Count % 2 == 0 ? 0.3f : 0.7f);
+
                 var miner = new Miner(
                     new Vector2(xOffset, Program.refHeight * 0.9f),
                     Program.caravan,
                     minerState.BasePower
                 );
+
+                // Restore miner's inventory, speed, pickaxe
                 miner.invCount = minerState.InvCount;
                 miner.invMax = minerState.InvMax;
+                miner.Speed = minerState.Speed; // Load the miner’s speed
                 miner.pickaxeStats = minerState.PickaxeStats;
 
                 Program.miners.Add(miner);
@@ -121,6 +129,7 @@ public class SaveSystem
         if (gameState.Player != null && Program.player != null)
         {
             Program.player.basePwr = gameState.Player.BasePower;
+            Program.player.Speed = gameState.Player.Speed; // Load the player’s speed
             Program.player.SetPickaxeStats(gameState.Player.PickaxeStats);
         }
 
