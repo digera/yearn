@@ -49,6 +49,11 @@ public class Miner
     public void Update(float dt, List<Block> blocks)
     {
         attn += dt;
+        if (invCount >= invMax)
+        {
+            CurrentState = MinerState.Returning;
+        }
+
 
         if (attn >= attnSpan)
         {
@@ -105,9 +110,14 @@ public class Miner
             if (dist <= 5f)
             {
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
+                if (target.Yield > 0)
+                {
+                    target.Yield--;
+                    invCount++;
+                }
                 if (target.Dur <= 0)
                 {
-                    UpdateInventory(target);
+                    invCount += target.Yield;
                     blocks.Remove(target);
                 }
                 activePickaxes.RemoveAt(i);
@@ -185,14 +195,6 @@ public class Miner
         return Position.Y >= caravan.Y - Radius;
     }
 
-    public void UpdateInventory(Block block)
-    {
-        invCount += block.Yield;
-        if (invCount >= invMax)
-        {
-            CurrentState = MinerState.Returning;
-        }
-    }
 
     private Block GetClosestBlockInRange(List<Block> blocks)
     {

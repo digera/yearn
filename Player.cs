@@ -72,7 +72,13 @@ public class Player
             if (dist <= 5f)
             {
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
+                if (target.Yield > 0) 
+                { 
+                target.Yield--;
+                Program.Earth++;
+                }
                 if (target.Dur <= 0)
+                   
                 {
                     Program.Earth += target.Yield;
                     blocks.Remove(target);
@@ -111,7 +117,7 @@ public class Player
         }
 
         // Draw mining range
-        Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
+       Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
 
         // Draw player circle
         Color circleColor = CurrentState switch
