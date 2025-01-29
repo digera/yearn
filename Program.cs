@@ -222,10 +222,12 @@ public class Program
             {
                 miners.Add(new Miner(GetMouseWorld(), caravan, Random.Shared.Next(1, 10)));
             }
+
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
                 Vector2 mouseWorld = GetMousePositionRef();
                 bool blockClicked = false;
+
                 foreach (var b in blocks)
                 {
                     if (mouseWorld.X >= b.X && mouseWorld.X <= b.X + b.Size &&
@@ -238,7 +240,16 @@ public class Program
                     }
                 }
 
-                if (!blockClicked) player.SetTarget(mouseWorld);
+                if (!blockClicked)
+                {
+                    player.SetTarget(mouseWorld);
+                }
+
+                // Check if any miner was clicked
+                foreach (var miner in miners)
+                {
+                    miner.CheckClick(mouseWorld);
+                }
             }
             if (blocks.Count < 300)
             {

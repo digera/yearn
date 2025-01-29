@@ -74,6 +74,13 @@ public class Miner
         UpdatePickaxes(dt, blocks);
     }
 
+    public void CheckClick(Vector2 mousePosition)
+    {
+        if (Vector2.Distance(mousePosition, Position) <= Radius)
+        {
+            CurrentState = MinerState.Returning;
+        }
+    }
     private void UpdatePickaxes(float dt, List<Block> blocks)
     {
         for (int i = activePickaxes.Count - 1; i >= 0; i--)
