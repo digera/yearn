@@ -139,7 +139,7 @@ public class Player
     private float pickaxeTimer;
     private const float PICKAXE_INTERVAL = 0.25f;
     private Caravan caravan;
-    private int basePwr = 20;
+    public int basePwr = 20;
 
     public Player(Vector2 startPos, Caravan caravan)
     {
@@ -147,6 +147,7 @@ public class Player
         TargetPosition = startPos;
         this.caravan = caravan;
         this.basePwr = basePwr;
+
         pickaxeStats = new PickaxeStats(
             speed: 300f,
             size: 4f,
@@ -161,7 +162,7 @@ public class Player
         UpdateState(dt, blocks);
         UpdatePickaxes(dt, blocks);
 
-        if (Position.Y >= caravan.Y -100 && CurrentState != PlayerState.Riding)
+        if (Position.Y >= caravan.Y - 100 && CurrentState != PlayerState.Riding)
         {
             CurrentState = PlayerState.Riding;
             Position = new Vector2(Position.X, caravan.Y - 100);
@@ -174,6 +175,7 @@ public class Player
         {
             var (pos, target) = activePickaxes[i];
 
+            // If target is gone, remove pickaxe
             if (!blocks.Contains(target))
             {
                 activePickaxes.RemoveAt(i);
@@ -185,6 +187,7 @@ public class Player
                 target.Y + target.Size * 0.5f
             );
 
+            // Move pickaxe toward block center
             Vector2 dir = Vector2.Normalize(targetCenter - pos);
             Vector2 newPos = pos + dir * pickaxeStats.Speed * dt;
 
@@ -201,10 +204,12 @@ public class Player
             }
             else
             {
+                // Update pickaxe position
                 activePickaxes[i] = (newPos, target);
             }
         }
 
+        // Auto-fire pickaxe while mining
         if (CurrentState == PlayerState.Mining)
         {
             pickaxeTimer += dt;
@@ -222,24 +227,29 @@ public class Player
 
     public void Draw()
     {
+        // Draw pickaxes
         foreach (var (pos, _) in activePickaxes)
         {
             Raylib.DrawCircleV(pos, pickaxeStats.Size, pickaxeStats.Color);
         }
 
+        // Draw mining range
         Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
 
+        // Draw player circle
         Color circleColor = CurrentState switch
         {
             PlayerState.Idle => Color.Red,
             PlayerState.Walking => Color.Green,
             PlayerState.Crafting => Color.Blue,
             PlayerState.Mining => Color.Orange,
+            PlayerState.Riding => Color.Gold,
             _ => Color.Red
         };
 
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
+        // Label with current state
         string st = CurrentState.ToString();
         Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
         Raylib.DrawText(
@@ -260,6 +270,7 @@ public class Player
     private void UpdateMovement(float dt, List<Block> blocks)
     {
         if (!IsMoving) return;
+
         Vector2 dir = TargetPosition - Position;
         float dist = dir.Length();
         if (dist <= 5f)
@@ -272,6 +283,8 @@ public class Player
 
         dir = Vector2.Normalize(dir);
         Vector2 nextPos = Position + dir * Speed * dt;
+
+        // Stop if overlapping a block; else move
         if (!IsOverlappingAnyBlock(nextPos, blocks))
             Position = nextPos;
         else
@@ -320,7 +333,10 @@ public class Player
     private bool IsOverlappingAnyBlock(Vector2 pos, List<Block> blocks)
     {
         foreach (var b in blocks)
-            if (b.OverlapsCircle(pos, Radius)) return true;
+        {
+            if (b.OverlapsCircle(pos, Radius))
+                return true;
+        }
         return false;
     }
 
@@ -328,7 +344,19 @@ public class Player
     {
         Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
     }
+
+    // These methods let the save system read/write pickaxe stats for the player
+    public PickaxeStats GetPickaxeStats()
+    {
+        return pickaxeStats;
+    }
+
+    public void SetPickaxeStats(PickaxeStats stats)
+    {
+        pickaxeStats = stats;
+    }
 }
+
 
 public class Miner
 {
@@ -578,7 +606,7 @@ public class Program
     private static SaveSystem saveSystem = new SaveSystem();
     public static List<Block> blocks = new List<Block>();
     public static Caravan caravan;
-    static Player player;
+    public static Player player;
     static Camera2D camera;
     public static int Earth = 0;
     static float caravanY;
@@ -780,8 +808,8 @@ public class Program
         float maxX = refWidth / 2;
         desiredPosition.X = Math.Clamp(desiredPosition.X, minX, maxX);
         float caravanHalfHeight = caravan.height;
-        float maxY = caravan.Y - caravanHalfHeight * 2; 
-        float minY = float.MinValue; 
+        float maxY = caravan.Y - caravanHalfHeight * 2;
+        float minY = float.MinValue;
         desiredPosition.Y = Math.Min(desiredPosition.Y, maxY);
         camera.Target = Vector2.Lerp(camera.Target, desiredPosition, smoothSpeed);
         camera.Target.Y = Math.Min(camera.Target.Y, maxY);
