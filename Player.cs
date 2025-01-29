@@ -17,7 +17,8 @@ public class Player
     private const float PICKAXE_INTERVAL = 0.25f;
     private Caravan caravan;
     public int basePwr = 20;
-
+    private int exp = 0;
+    private int expToNextLevel = 10;
     public Player(Vector2 startPos, Caravan caravan)
     {
         Position = startPos;
@@ -38,7 +39,12 @@ public class Player
         UpdateMovement(dt, blocks);
         UpdateState(dt, blocks);
         UpdatePickaxes(dt, blocks);
-
+        if (exp >= expToNextLevel)
+        {
+            exp = 0;
+            expToNextLevel += 10 * basePwr;
+            basePwr++;
+        }
         if (Position.Y >= caravan.Y - 100 && CurrentState != PlayerState.Riding)
         {
             CurrentState = PlayerState.Riding;

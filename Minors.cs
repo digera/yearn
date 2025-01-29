@@ -17,8 +17,8 @@ public class Miner
     private Vector2 direction;
     public int basePwr { get; private set; }
     private Color circleColor = Color.Purple;
-
-
+    private int exp = 0;
+    private int expToNextLevel = 10;
 
     public MinerState CurrentState { get; private set; } = MinerState.MovingUp;
 
@@ -53,7 +53,12 @@ public class Miner
         {
             CurrentState = MinerState.Returning;
         }
-
+        if (exp >= expToNextLevel)
+        {
+            exp = 0;
+            expToNextLevel += 10*basePwr;
+            basePwr++;
+        }
 
         if (attn >= attnSpan)
         {
@@ -109,7 +114,9 @@ public class Miner
             float dist = Vector2.Distance(newPos, targetCenter);
             if (dist <= 5f)
             {
+                exp++;
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
+
                 if (target.Yield > 0)
                 {
                     target.Yield--;
@@ -232,17 +239,22 @@ public class Miner
             Raylib.DrawCircleV(pos, pickaxeStats.Size, pickaxeStats.Color);
         }
 
-        Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
-        string st = $"{CurrentState} ({invCount}/{invMax}) Pwr:{basePwr + pickaxeStats.MiningPower}";
-        Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
-        Raylib.DrawText(
-            st,
-            (int)(Position.X - ts.X / 2),
-            (int)(Position.Y - Radius - 20),
-            20,
-            Color.Black
-        );
+        if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(), Position, Radius))
+        {
+            Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
+            string st = $"{CurrentState} ({invCount}/{invMax}) Pwr:{basePwr}+{pickaxeStats.MiningPower}";
+            Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
+            Raylib.DrawText(
+                st,
+                (int)(Position.X - ts.X / 2),
+                (int)(Position.Y - Radius - 20),
+                20,
+                Color.Black
+            );
+        }
+
+
     }
 }

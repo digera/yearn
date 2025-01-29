@@ -344,7 +344,7 @@ public class Program
         nextSetStartY = startY - (newRows - 1) * blockSize;
     }
 
-    static Vector2 GetMouseWorld()
+    public static Vector2 GetMouseWorld()
     {
         Vector2 screenMouse = Raylib.GetMousePosition();
         return Raylib.GetScreenToWorld2D(screenMouse, camera);
