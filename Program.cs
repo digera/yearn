@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Text.Json.Serialization;
 using Raylib_cs;
 
 public enum PlayerState
@@ -16,7 +17,8 @@ public enum MinerState
 {
     MovingUp,
     Mining,
-    Returning
+    Returning,
+    Idle
 }
 
 public class Block
@@ -79,7 +81,9 @@ public struct PickaxeStats
     public float Speed { get; set; }
     public float Size { get; set; }
     public int MiningPower { get; set; }
-    public Color Color;
+
+    // Just keep Color as-is
+    public Color Color { get; set; }
 
     public PickaxeStats(float speed = 300f, float size = 4f, int miningPower = 1, Color? color = null)
     {
@@ -179,12 +183,13 @@ public class Program
         else
         {
             // Default game setup
-            miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)1));
-            miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)5));
-            miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)10));
-            miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)15));
-            miners.Add(new Miner(new Vector2(refWidth * 0.3f, refHeight * 0.9f), caravan, (int)20));
-            miners.Add(new Miner(new Vector2(refWidth * 0.7f, refHeight * 0.9f), caravan, (int)25));
+            miners.Add(new Miner(
+                new Vector2(refWidth * 0.3f, refHeight * 0.9f),
+                caravan,
+                20,
+                200f, 
+                "Alpha"
+            ));
         }
 
         int cols = refWidth / blockSize;
@@ -224,7 +229,14 @@ public class Program
             saveSystem.Update(dt);
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
-                miners.Add(new Miner(GetMouseWorld(), caravan, Random.Shared.Next(1, 10)));
+                miners.Add(new Miner(
+                 GetMouseWorld(),
+                 caravan,
+                 Random.Shared.Next(1, 10),    // base power
+                 Random.Shared.Next(75, 200),  // speed
+                 Names.CommonNames[Random.Shared.Next(Names.CommonNames.Length)]
+
+));
             }
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))

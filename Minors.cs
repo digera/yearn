@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 
 public class Miner
 {
+    public string MinerName { get; set; }
     public Vector2 Position;
     public float Speed = 150f;
     public float Radius = 16f;
@@ -21,18 +22,21 @@ public class Miner
     private int exp = 0;
     private int expToNextLevel = 10;
 
-    public MinerState CurrentState { get; private set; } = MinerState.MovingUp;
+    public MinerState CurrentState { get; private set; } = MinerState.Idle;
 
     public PickaxeStats pickaxeStats;
     private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
     private float pickaxeTimer;
     private const float PICKAXE_INTERVAL = 0.25f;
 
-    public Miner(Vector2 startPos, Caravan caravan, int basePwr)
+    public Miner(Vector2 startPos, Caravan caravan, int basePwr, float speed, string minerName)
     {
+
+        MinerName = minerName;
         Position = startPos;
         this.caravan = caravan;
         this.basePwr = basePwr;
+        Speed = speed;
 
 
         pickaxeStats = new PickaxeStats(
@@ -261,7 +265,7 @@ public class Miner
             
 
                 Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
-                string st = $"{CurrentState} ({invCount}/{invMax})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
+                string st = $"{MinerName} {CurrentState} ({invCount}/{invMax})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
                 Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
                 Raylib.DrawText(
                     st,

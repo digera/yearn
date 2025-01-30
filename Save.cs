@@ -18,6 +18,7 @@ public class GameState
 
     public class MinerSaveData
     {
+        public string MinerName { get; set; }
         public int InvCount { get; set; }
         public int InvMax { get; set; }
         public int BasePower { get; set; }
@@ -28,7 +29,8 @@ public class GameState
     public class PlayerSaveData
     {
         public int BasePower { get; set; }
-        public float Speed { get; set; } // Added Speed property
+        public float Speed { get; set; } 
+        
         public PickaxeStats PickaxeStats { get; set; }
     }
 }
@@ -60,6 +62,7 @@ public class SaveSystem
             // Save all miners
             Miners = Program.miners.Select(m => new GameState.MinerSaveData
             {
+                MinerName = m.MinerName,
                 InvCount = m.invCount,
                 InvMax = m.invMax,
                 BasePower = m.basePwr,
@@ -79,7 +82,8 @@ public class SaveSystem
         // Serialize to JSON with pretty-printing
         string jsonString = JsonSerializer.Serialize(gameState, new JsonSerializerOptions
         {
-            WriteIndented = true
+            WriteIndented = true,
+            IncludeFields = true
         });
 
         File.WriteAllText(SAVE_FILE, jsonString);
@@ -91,7 +95,11 @@ public class SaveSystem
         if (!File.Exists(SAVE_FILE)) return;
 
         string jsonString = File.ReadAllText(SAVE_FILE);
-        var gameState = JsonSerializer.Deserialize<GameState>(jsonString);
+        var options = new JsonSerializerOptions
+        {
+            IncludeFields = true
+        };
+        var gameState = JsonSerializer.Deserialize<GameState>(jsonString, options);
         if (gameState == null) return;
 
         // Restore global stats
@@ -105,31 +113,31 @@ public class SaveSystem
         {
             foreach (var minerState in gameState.Miners)
             {
-                // Create each miner near the caravan (or however you like).
-                // For example, alternating between x=30% and x=70% of screen:
                 float xOffset = Program.refWidth * (Program.miners.Count % 2 == 0 ? 0.3f : 0.7f);
 
                 var miner = new Miner(
                     new Vector2(xOffset, Program.refHeight * 0.9f),
                     Program.caravan,
-                    minerState.BasePower
+                    minerState.BasePower,
+                    minerState.Speed,
+                    minerState.MinerName
                 );
 
-                // Restore miner's inventory, speed, pickaxe
+                miner.MinerName = minerState.MinerName;
                 miner.invCount = minerState.InvCount;
                 miner.invMax = minerState.InvMax;
-                miner.Speed = minerState.Speed; // Load the miner’s speed
+                miner.Speed = minerState.Speed; 
                 miner.pickaxeStats = minerState.PickaxeStats;
 
                 Program.miners.Add(miner);
             }
         }
 
-        // Restore player
+
         if (gameState.Player != null && Program.player != null)
         {
             Program.player.basePwr = gameState.Player.BasePower;
-            Program.player.Speed = gameState.Player.Speed; // Load the player’s speed
+            Program.player.Speed = gameState.Player.Speed;
             Program.player.SetPickaxeStats(gameState.Player.PickaxeStats);
         }
 
