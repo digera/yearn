@@ -1,5 +1,6 @@
 ﻿using Raylib_cs;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 
 public class Miner
@@ -45,9 +46,21 @@ public class Miner
         direction = new Vector2(MathF.Cos(angleRadians), MathF.Sin(angleRadians));
         direction = Vector2.Normalize(direction);
     }
-
+    private float tip = 0f;
+    private const float tipSpan = 1f;
     public void Update(float dt, List<Block> blocks)
     {
+
+        if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(),Position,Radius))
+        {
+            tip = tipSpan;
+        }
+        else if (tip > 0)
+        {
+            tip -= dt;
+        }
+
+
         attn += dt;
         if (invCount >= invMax)
         {
@@ -56,7 +69,7 @@ public class Miner
         if (exp >= expToNextLevel)
         {
             exp = 0;
-            expToNextLevel += 10*basePwr;
+            expToNextLevel += 10 * basePwr;
             basePwr++;
         }
 
@@ -232,7 +245,7 @@ public class Miner
         Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
     }
 
-    public void Draw()
+    public void Draw(float dt)
     {
         foreach (var (pos, _) in activePickaxes)
         {
@@ -241,20 +254,23 @@ public class Miner
 
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
-        if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(), Position, Radius))
-        {
-            Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
-            string st = $"{CurrentState} ({invCount}/{invMax}) Pwr:{basePwr}+{pickaxeStats.MiningPower}";
-            Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
-            Raylib.DrawText(
-                st,
-                (int)(Position.X - ts.X / 2),
-                (int)(Position.Y - Radius - 20),
-                20,
-                Color.Black
-            );
+        if (tip>0)
+        { 
+            
+            {
+            
+
+                Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
+                string st = $"{CurrentState} ({invCount}/{invMax})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
+                Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
+                Raylib.DrawText(
+                    st,
+                    (int)(Position.X - ts.X / 2),
+                    (int)(Position.Y - Radius - 20),
+                    20,
+                    Color.Black
+                );
+            }
         }
-
-
     }
 }

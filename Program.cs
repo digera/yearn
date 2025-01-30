@@ -151,7 +151,9 @@ public class Program
 
     public static void Main()
     {
+        Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         Raylib.InitWindow(refWidth, refHeight, "Yearn");
+
         Raylib.SetTargetFPS(60);
 
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
@@ -217,6 +219,8 @@ public class Program
         while (!Raylib.WindowShouldClose())
         {
             float dt = Raylib.GetFrameTime();
+            camera.Zoom = (float)Raylib.GetScreenHeight() / (float)refHeight;
+            camera.Offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
             saveSystem.Update(dt);
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
@@ -276,14 +280,12 @@ public class Program
             foreach (var b in blocks) b.Draw();
             caravan.Draw();
             player.Draw();
-            foreach (var m in miners) m.Draw();
+            foreach (var m in miners) m.Draw(dt);
 
             Raylib.EndMode2D();
 
-            Raylib.DrawText($"Player Pos: {player.Position.X:F2}, {player.Position.Y:F2}",
-                            10, 10, 20, Color.Black);
-            Raylib.DrawText($"Player State: {player.CurrentState}",
-                            10, 30, 20, Color.Black);
+            Raylib.DrawText($"Player Pos: {player.Position.X:F2}, {player.Position.Y:F2}", 10, 10, 20, Color.Black);
+            Raylib.DrawText($"Player State: {player.CurrentState}", 10, 30, 20, Color.Black);
             Raylib.DrawText($"Blocks: {blocks.Count}", 10, 50, 20, Color.Black);
             Raylib.DrawText($"Minors: {miners.Count}", 10, 70, 20, Color.Black);
 

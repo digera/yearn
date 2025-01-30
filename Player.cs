@@ -77,6 +77,7 @@ public class Player
             float dist = Vector2.Distance(newPos, targetCenter);
             if (dist <= 5f)
             {
+                exp++;
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
                 if (target.Yield > 0) 
                 { 
