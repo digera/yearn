@@ -31,4 +31,44 @@ public struct Names
 
 
     };
+    private static HashSet<string> usedNames = new HashSet<string>();
+
+    public static string GetUniqueName()
+    {
+        // If all names are used, clear the used names (optional)
+        if (usedNames.Count >= CommonNames.Length)
+        {
+            usedNames.Clear();
+        }
+
+        // Get available names
+        var availableNames = CommonNames.Where(name => !usedNames.Contains(name)).ToList();
+
+        // Pick a random available name
+        Random random = new Random();
+        string selectedName = availableNames[random.Next(availableNames.Count)];
+
+        // Mark it as used
+        usedNames.Add(selectedName);
+
+        return selectedName;
+    }
+
+    // When loading a saved game, register existing names
+    public static void RegisterName(string name)
+    {
+        if (CommonNames.Contains(name))
+        {
+            usedNames.Add(name);
+        }
+    }
+
+    // Optional: Clear all used names if needed
+    public static void ClearUsedNames()
+    {
+        usedNames.Clear();
+    }
 }
+
+
+

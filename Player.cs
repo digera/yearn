@@ -58,7 +58,6 @@ public class Player
         {
             var (pos, target) = activePickaxes[i];
 
-            // If target is gone, remove pickaxe
             if (!blocks.Contains(target))
             {
                 activePickaxes.RemoveAt(i);
@@ -70,14 +69,13 @@ public class Player
                 target.Y + target.Size * 0.5f
             );
 
-            // Move pickaxe toward block center
             Vector2 dir = Vector2.Normalize(targetCenter - pos);
-            Vector2 newPos = pos + dir * pickaxeStats.Speed * dt;
+            Vector2 newPos = pos + dir * 250f * dt;
 
             float dist = Vector2.Distance(newPos, targetCenter);
             if (dist <= 5f)
             {
-                exp++;
+
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
                 if (target.Yield > 0) 
                 { 
@@ -94,16 +92,14 @@ public class Player
             }
             else
             {
-                // Update pickaxe position
                 activePickaxes[i] = (newPos, target);
             }
         }
 
-        // Auto-fire pickaxe while mining
         if (CurrentState == PlayerState.Mining)
         {
             pickaxeTimer += dt;
-            if (pickaxeTimer >= PICKAXE_INTERVAL)
+            if (pickaxeTimer >= pickaxeStats.Speed)
             {
                 pickaxeTimer = 0f;
                 Block target = GetClosestBlockInRange(blocks);

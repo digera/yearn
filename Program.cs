@@ -85,11 +85,11 @@ public struct PickaxeStats
     // Just keep Color as-is
     public Color Color { get; set; }
 
-    public PickaxeStats(float speed = 300f, float size = 4f, int miningPower = 1, Color? color = null)
+    public PickaxeStats(float speed, float size, int miningPower, Color? color = null)
     {
-        Speed = speed;
-        Size = size;
-        MiningPower = miningPower;
+        Speed = speed = .75f;
+        Size = size = 4f;
+        MiningPower = miningPower = 1;
         Color = color ?? Color.Black;
     }
 }
@@ -186,8 +186,8 @@ public class Program
             miners.Add(new Miner(
                 new Vector2(refWidth * 0.3f, refHeight * 0.9f),
                 caravan,
-                20,
-                200f, 
+                1,
+                255f,
                 "Alpha"
             ));
         }
@@ -233,8 +233,8 @@ public class Program
                  GetMouseWorld(),
                  caravan,
                  Random.Shared.Next(1, 10),    // base power
-                 Random.Shared.Next(75, 200),  // speed
-                 Names.CommonNames[Random.Shared.Next(Names.CommonNames.Length)]
+                 Random.Shared.Next(75, 200),  // mov
+                 Names.GetUniqueName()
 
 ));
             }

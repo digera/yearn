@@ -126,7 +126,7 @@ public class Miner
             );
 
             Vector2 dir = Vector2.Normalize(targetCenter - pos);
-            Vector2 newPos = pos + dir * pickaxeStats.Speed * dt;
+            Vector2 newPos = pos + dir * 250f * dt;
 
             float dist = Vector2.Distance(newPos, targetCenter);
             if (dist <= 5f)
@@ -155,7 +155,7 @@ public class Miner
         if (CurrentState == MinerState.Mining)
         {
             pickaxeTimer += dt;
-            if (pickaxeTimer >= PICKAXE_INTERVAL)
+            if (pickaxeTimer >= pickaxeStats.Speed)
             {
                 pickaxeTimer = 0f;
                 Block target = GetClosestBlockInRange(blocks);
