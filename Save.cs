@@ -13,7 +13,6 @@ public class GameState
 
     public List<MinerSaveData> Miners { get; set; }
 
-    // Player is now a single object, not a list
     public PlayerSaveData Player { get; set; }
 
     public class MinerSaveData
@@ -22,7 +21,7 @@ public class GameState
         public int InvCount { get; set; }
         public int InvMax { get; set; }
         public int BasePower { get; set; }
-        public float Speed { get; set; } // Added Speed property
+        public float Speed { get; set; } 
         public PickaxeStats PickaxeStats { get; set; }
     }
 
@@ -66,7 +65,7 @@ public class SaveSystem
                 InvCount = m.invCount,
                 InvMax = m.invMax,
                 BasePower = m.basePwr,
-                Speed = m.Speed, // Save the miner's speed
+                Speed = m.Speed, 
                 PickaxeStats = m.pickaxeStats
             }).ToList(),
 
@@ -74,12 +73,12 @@ public class SaveSystem
             Player = new GameState.PlayerSaveData
             {
                 BasePower = Program.player != null ? Program.player.basePwr : 0,
-                Speed = Program.player != null ? Program.player.Speed : 200f, // Save the player’s speed
+                Speed = Program.player != null ? Program.player.Speed : 200f, 
                 PickaxeStats = Program.player != null ? Program.player.GetPickaxeStats() : new PickaxeStats()
             }
         };
 
-        // Serialize to JSON with pretty-printing
+        // Serialize to JSON
         string jsonString = JsonSerializer.Serialize(gameState, new JsonSerializerOptions
         {
             WriteIndented = true,

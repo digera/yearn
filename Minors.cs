@@ -55,7 +55,7 @@ public class Miner
     public void Update(float dt, List<Block> blocks)
     {
 
-        if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(),Position,Radius))
+        if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(),Position,Radius)||(Raylib.IsKeyDown(KeyboardKey.F1)))
         {
             tip = tipSpan;
         }
@@ -134,7 +134,7 @@ public class Miner
                 exp++;
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
 
-                if (target.Yield > 0)
+                if (target.Yield > 1)
                 {
                     target.Yield--;
                     invCount++;
