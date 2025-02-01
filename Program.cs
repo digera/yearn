@@ -19,8 +19,11 @@ public enum MinerState
     MovingUp,
     Mining,
     Returning,
+    Working,
     Idle
 }
+
+
 
 public class Block
 {
@@ -98,52 +101,6 @@ public struct PickaxeStats
 }
 
 
-public class Caravan
-{
-    private Vector2 position;
-    public float width;
-    public float height;
-    private Color color;
-
-    public Vector2 Center  => new Vector2(width / 2, position.Y);
-    public float Y => position.Y;
-
-    public Caravan(int screenWidth, int screenHeight)
-    {
-        width = screenWidth;
-        height = screenHeight * 0.25f;
-        position = new Vector2(0, screenHeight - height * 0.05f);
-        color = new Color((byte)139, (byte)69, (byte)19, (byte)255);
-    }
-
-    public void SetY(float y) => position.Y = y;
-    public float GetY() => position.Y;
-
-
-
-    public void Draw()
-    {
-        Raylib.DrawEllipse(
-            (int)(position.X + width / 2),
-            (int)position.Y,
-            width / 2,
-            height,
-            color
-        );
-    }
-
-    public bool CheckClick(Vector2 mousePosition)
-    {
-        // I think this only works on circles 
-        return Vector2.Distance(mousePosition, Center) <= height;
-    }
-}
-
-
-
-
-
-
 
 public class Program
 {
@@ -166,7 +123,9 @@ public class Program
     public static List<Miner> miners = new List<Miner>();
     Vector2 topLeft = Raylib.GetScreenToWorld2D(new Vector2(0, 0), camera);
     Vector2 bottomRight = Raylib.GetScreenToWorld2D(new Vector2(Program.refWidth, Program.refHeight), camera);
-
+    public static Crusher crusher;
+    public static Button upgradeHopperButton;
+    public static Button upgradeRateButton;
 
     public static void Main()
     {
@@ -177,6 +136,26 @@ public class Program
 
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
+        crusher = new Crusher(caravan);
+        upgradeHopperButton = new Button(
+            caravan,
+            new Vector2(300, crusher.offset.Y +300),  // Use same Y offset as crusher
+            120,
+            40,
+            crusher.HopCost.ToString(),
+            Color.DarkBlue,
+            Color.White
+        );
+
+        upgradeRateButton = new Button(
+            caravan,
+            new Vector2(300, crusher.offset.Y  + 400),  // 60 pixels below first button
+            120,
+            40,
+            crusher.RateCost.ToString(),
+            Color.DarkBrown,
+            Color.White
+        );
         player = new Player(playerStartPos, caravan);
 
         camera = new Camera2D
@@ -241,7 +220,9 @@ public class Program
             float dt = Raylib.GetFrameTime();
             camera.Zoom = (float)Raylib.GetScreenHeight() / (float)refHeight;
             camera.Offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
+            
             saveSystem.Update(dt);
+            crusher.Update(dt);
 
 
 
@@ -268,6 +249,19 @@ public class Program
                 // works
 
             }
+            if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+            {
+                Vector2 mouseWorld = Program.GetMouseWorld();
+                if (Program.crusher.CheckClick(mouseWorld))
+                {
+                    if (miners.Count > 0)
+                    {
+                        int index = Random.Shared.Next(miners.Count);
+                        miners[index].CurrentState = MinerState.Working;
+                    }
+                }
+              
+            }
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
@@ -292,12 +286,25 @@ public class Program
 
 
                 }
+                if (upgradeHopperButton.IsClicked(mouseWorld))
+                {
+                    crusher.UpgradeHopper();
+                }
+
+                else if (upgradeRateButton.IsClicked(mouseWorld))
+                {
+                    crusher.UpgradeRate();
+                }
+
+
             }
             if (player.Position.Y >= caravan.Y - 100)
             {
                 player.Position = new Vector2(player.Position.X, caravan.Y - 100);
             }
-      
+
+            
+
 
 
 
@@ -326,6 +333,9 @@ public class Program
 
             foreach (var b in blocks) b.Draw();
             caravan.Draw();
+            crusher.Draw();
+            upgradeHopperButton.Draw();
+            upgradeRateButton.Draw();
             player.Draw(dt);
             foreach (var m in miners) m.Draw(dt);
 

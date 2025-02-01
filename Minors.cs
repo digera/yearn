@@ -1,12 +1,14 @@
 ﻿using Raylib_cs;
+using System;
+using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 
 
 public class Miner
 {
     public string MinerName { get; set; }
     public Vector2 Position;
+    public Vector2 TargetPosition;
     public float Speed = 150f;
     public float Radius = 16f;
     public const float MINING_RANGE = 64f;
@@ -22,22 +24,25 @@ public class Miner
     private int exp = 0;
     private int expToNextLevel = 10;
 
-    public MinerState CurrentState { get; private set; } = MinerState.Idle;
+    public MinerState CurrentState { get; set; } = MinerState.Idle;
 
     public PickaxeStats pickaxeStats;
     private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
     private float pickaxeTimer;
-    
+
+    private float tip = 0f;
+    private const float tipSpan = 1f;
+
+    private float workingFillTimer = 0f;
 
     public Miner(Vector2 startPos, Caravan caravan, int basePwr, float speed, string minerName)
     {
-
         MinerName = minerName;
         Position = startPos;
+        TargetPosition = startPos; 
         this.caravan = caravan;
         this.basePwr = basePwr;
         Speed = speed;
-
 
         pickaxeStats = new PickaxeStats(
             speed: 0.75f,
@@ -50,12 +55,60 @@ public class Miner
         direction = new Vector2(MathF.Cos(angleRadians), MathF.Sin(angleRadians));
         direction = Vector2.Normalize(direction);
     }
-    private float tip = 0f;
-    private const float tipSpan = 1f;
+
     public void Update(float dt, List<Block> blocks)
     {
+        
+        if (CurrentState == MinerState.Working)
+        {
+        
+            Vector2 collectionPoint = new Vector2(Program.refWidth / 2, caravan.Y);
+            if (invCount < invMax)
+            {
+        
+                Vector2 dir = collectionPoint - Position;
+                if (dir != Vector2.Zero) { dir = Vector2.Normalize(dir); }
+                Position += dir * Speed * dt;
 
-        if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(),Position,Radius)||(Raylib.IsKeyDown(KeyboardKey.F1)))
+                if (Vector2.Distance(Position, collectionPoint) < 5f)
+                {
+                    workingFillTimer += dt;
+                    if (workingFillTimer >= 0.25f)
+                    {
+                        workingFillTimer = 0;
+                        if (Program.Earth > 0)
+                        {
+                            Program.Earth--;
+                            invCount++;
+                        }
+                    }
+                }
+            }
+            else 
+            {
+                
+                Vector2 crusherDropOff = Program.crusher.GetPosition() + new Vector2(0, 200);
+                Vector2 dir = crusherDropOff - Position;
+                if (dir != Vector2.Zero) { dir = Vector2.Normalize(dir); }
+                Position += dir * Speed * dt;
+
+                if (Vector2.Distance(Position, crusherDropOff) < 5f)
+                {
+                
+                    Program.crusher.ReceiveEarth(invCount);
+                    invCount = 0;
+                
+                    if (Program.crusher.EarthStored >= Program.crusher.Hopper)
+                    {
+                        CurrentState = MinerState.MovingUp;
+                    }
+                
+                }
+            }
+            return;
+        }
+        
+        if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(), Position, Radius) || Raylib.IsKeyDown(KeyboardKey.F1))
         {
             tip = tipSpan;
         }
@@ -63,7 +116,6 @@ public class Miner
         {
             tip -= dt;
         }
-
 
         attn += dt;
         if (invCount >= invMax)
@@ -97,8 +149,21 @@ public class Miner
                 ReturnToCaravan(dt);
                 break;
         }
+        
 
         UpdatePickaxes(dt, blocks);
+    }
+
+    // deprecated...
+    private void MoveTowardsTarget(float dt)
+    {
+        Vector2 dir = TargetPosition - Position;
+        if (dir != Vector2.Zero)
+        {
+            dir = Vector2.Normalize(dir);
+            Position += dir * Speed * dt;
+        }
+        ClampToScreen();
     }
 
     public void CheckClick(Vector2 mousePosition)
@@ -108,6 +173,7 @@ public class Miner
             CurrentState = MinerState.Returning;
         }
     }
+
     private void UpdatePickaxes(float dt, List<Block> blocks)
     {
         for (int i = activePickaxes.Count - 1; i >= 0; i--)
@@ -219,7 +285,6 @@ public class Miner
         return Position.Y >= caravan.Y - Radius;
     }
 
-
     private Block GetClosestBlockInRange(List<Block> blocks)
     {
         float minDist = float.MaxValue;
@@ -258,23 +323,18 @@ public class Miner
 
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
-        if (tip>0)
-         
-            
-            {
-            
-
-                Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
-                string st = $"{MinerName} {CurrentState} ({invCount}/{invMax})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
-                Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
-                Raylib.DrawText(
-                    st,
-                    (int)(Position.X - ts.X / 2),
-                    (int)(Position.Y - Radius - 20),
-                    20,
-                    Color.Black
-                );
-            }
-        
+        if (tip > 0)
+        {
+            Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
+            string st = $"{MinerName} {CurrentState} ({invCount}/{invMax})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
+            Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
+            Raylib.DrawText(
+                st,
+                (int)(Position.X - ts.X / 2),
+                (int)(Position.Y - Radius - 20),
+                20,
+                Color.Black
+            );
+        }
     }
 }
