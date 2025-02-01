@@ -242,6 +242,9 @@ public class Program
             camera.Zoom = (float)Raylib.GetScreenHeight() / (float)refHeight;
             camera.Offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
             saveSystem.Update(dt);
+
+
+
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
                 miners.Add(new Miner(
@@ -290,6 +293,15 @@ public class Program
 
                 }
             }
+            if (player.Position.Y >= caravan.Y - 100)
+            {
+                player.Position = new Vector2(player.Position.X, caravan.Y - 100);
+            }
+      
+
+
+
+
             if (blocks.Count < 300)
             {
                 GenerateNewBlockSet();

@@ -40,6 +40,7 @@ public class Player
         );
     }
 
+    
     public void Update(float dt, List<Block> blocks)
     {
         UpdateMovement(dt, blocks);
@@ -182,7 +183,7 @@ public class Player
             Position = TargetPosition;
             IsMoving = false;
             ClampToScreen(caravan);
-            ClampToCamera(Program.camera);
+            
             return;
         }
 
@@ -258,7 +259,7 @@ public class Player
     private void ClampToScreen(Caravan caravan)
     {
         Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
-        Position.Y = Math.Clamp(Position.Y, Radius, (caravan.Y+200) - Radius);
+       // Position.Y = Math.Clamp(Position.Y, Radius, (caravan.Y+200) - Radius);
     }
 
     public PickaxeStats GetPickaxeStats()
