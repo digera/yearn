@@ -259,7 +259,7 @@ public class Miner
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
         if (tip>0)
-        { 
+         
             
             {
             
@@ -275,6 +275,6 @@ public class Miner
                     Color.Black
                 );
             }
-        }
+        
     }
 }

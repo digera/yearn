@@ -297,7 +297,7 @@ public class Program
 
             foreach (var b in blocks) b.Draw();
             caravan.Draw();
-            player.Draw();
+            player.Draw(dt);
             foreach (var m in miners) m.Draw(dt);
 
             Raylib.EndMode2D();

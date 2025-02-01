@@ -8,7 +8,7 @@ public struct Names
 {
     public static readonly string[] CommonNames = new string[]
     {
-        "James", "Cody", "Chris", "Robert", "Drew", "Josh", "Tristan",
+        "James", "Cody", "Chris", "Robert", "Drew", "Josh", "Tristan","Miguel",
         "Michael", "John", "David", "William", "Joseph", "Thomas", "Charles",
         "Daniel", "Matthew", "Anthony", "Mark", "Donald", "Steven", "Paul",
         "Andrew", "Joshua", "Kenneth", "Kevin", "Brian", "George", "Edward",
@@ -26,7 +26,8 @@ public struct Names
         "Alpha","Bravo","Charlie","Delta","Echo","Foxtrot","Golf","Hotel","India","Juliet","Kilo","Lima","Mike","November","Oscar","Papa","Quebec","Romeo","Sierra","Tango","Uniform","Victor","Whiskey","Xray","Yankee","Zulu",
         "Monkey","Lion","Tiger","Bear","Wolf","Fox","Dog","Cat","Elephant","Giraffe","Horse","Cow","Pig","Sheep","Goat","Chicken","Duck","Goose","Turkey","Penguin","Ostrich","Parrot","Eagle","Hawk","Falcon","Owl","Raven","Crow","Sparrow","Robin","Bluejay","Cardinal","Finch","Canary","Goldfinch","Bullfin"
         ,"Warbler","Wren","Thrush","Swallow","Swift","Hummingbird","Kingfisher","Woodpecker","Nuthatch","Chickadee","Titmouse","Starling","Blackbird","Grackle","Oriole","Tanager","Bunting","Grosbeak","Sparrow","Junco","Snowbird","Bunting",
-        "Jaden","Brayden","Caden","Aiden","Kaden","Hayden","Jayden","Zayden","Raiden","Jaxen","Maxen","Paxen","Daxen","Axel","Max","Jax","Dax","Pax","Rex","Tex","Lex","Hex","Vex","Nex","Zex","Xex","Yex","Wex","Qex","Kex","Jex","Bex","Cex","Dex","Fex","Gex"
+        "Jaden","Brayden","Caden","Aiden","Kaden","Hayden","Jayden","Zayden","Raiden","Jaxen","Maxen","Paxen","Daxen","Axel","Max","Jax","Dax","Pax","Rex","Tex","Lex","Hex","Vex","Nex","Zex","Xex","Yex","Wex","Qex","Kex","Jex","Bex","Cex","Dex","Fex","Gex",
+        
 
 
 

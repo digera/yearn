@@ -13,14 +13,15 @@ public class Player
     public const float MINING_RANGE = 64f;
     public PlayerState CurrentState { get; set; } = PlayerState.Idle;
     public bool IsMoving = false;
-
+    private float tip = 0f;
+    private const float tipSpan = 1f;
     private PickaxeStats pickaxeStats;
     private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
     private float pickaxeTimer;
     private const float PICKAXE_INTERVAL = 0.25f;
     private Caravan caravan;
 
-    public int basePwr = 20;
+    public int basePwr = 60;
     private int exp = 0;
     private int expToNextLevel = 10;
 
@@ -44,8 +45,7 @@ public class Player
         UpdateMovement(dt, blocks);
         UpdateState(dt, blocks);
         UpdatePickaxes(dt, blocks);
-
-        // Simple leveling example:
+               
         if (exp >= expToNextLevel)
         {
             exp = 0;
@@ -78,6 +78,7 @@ public class Player
             float dist = Vector2.Distance(newPos, targetCenter);
             if (dist <= 5f)
             {
+                exp++;
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
                 if (target.Yield > 0)
                 {
@@ -113,7 +114,7 @@ public class Player
         }
     }
 
-    public void Draw()
+    public void Draw(float dt)
     {
         // Draw pickaxe projectiles
         foreach (var (pos, _) in activePickaxes)
@@ -121,8 +122,7 @@ public class Player
             Raylib.DrawCircleV(pos, pickaxeStats.Size, pickaxeStats.Color);
         }
 
-        // Range indicator
-        Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
+
 
         // Player color based on state
         Color circleColor = CurrentState switch
@@ -137,16 +137,35 @@ public class Player
 
         Raylib.DrawCircle((int)Position.X, (int)Position.Y, Radius, circleColor);
 
-        // Optional: draw the name of the current state
-        string st = CurrentState.ToString();
-        Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
-        Raylib.DrawText(
-            st,
-            (int)(Position.X - ts.X / 2),
-            (int)(Position.Y - Radius - 20),
+        if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(), Position, Radius) || (Raylib.IsKeyDown(KeyboardKey.F1)))
+        {
+            tip = tipSpan;
+        }
+        else if (tip > 0)
+        {
+            tip -= dt;
+        }
+
+        
+        if (tip > 0)
+        {
+            string st = $"Player {CurrentState} ({exp}/{expToNextLevel})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
+           // Raylib.DrawText(st, (int)Position.X - 20, (int)Position.Y - 20, 20, Color.Black);
+            
+            Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
+          
+            
+            Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
+            Raylib.DrawText(
+               st,
+              (int)(Position.X - ts.X / 2),
+               (int)(Position.Y - Radius - 20),
             20,
-            Color.Black
-        );
+              Color.Black
+           );
+        }
+
+    
     }
 
     public void SetTarget(Vector2 pos)
