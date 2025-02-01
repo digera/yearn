@@ -27,7 +27,7 @@ public class Miner
     public PickaxeStats pickaxeStats;
     private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
     private float pickaxeTimer;
-    private const float PICKAXE_INTERVAL = 0.25f;
+    
 
     public Miner(Vector2 startPos, Caravan caravan, int basePwr, float speed, string minerName)
     {
@@ -40,7 +40,7 @@ public class Miner
 
 
         pickaxeStats = new PickaxeStats(
-            speed: 250f,
+            speed: 0.75f,
             size: 3f,
             miningPower: 1,
             color: Color.Purple

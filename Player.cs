@@ -56,8 +56,7 @@ public class Player
 
     private void UpdatePickaxes(float dt, List<Block> blocks)
     {
-        // Move existing pickaxes
-        for (int i = activePickaxes.Count - 1; i >= 0; i--)
+       for (int i = activePickaxes.Count - 1; i >= 0; i--)
         {
             var (pos, target) = activePickaxes[i];
 
@@ -98,7 +97,6 @@ public class Player
             }
         }
 
-        // Automatically throw a pickaxe if in Mining state
         if (CurrentState == PlayerState.Mining)
         {
             pickaxeTimer += dt;
@@ -116,7 +114,7 @@ public class Player
 
     public void Draw(float dt)
     {
-        // Draw pickaxe projectiles
+
         foreach (var (pos, _) in activePickaxes)
         {
             Raylib.DrawCircleV(pos, pickaxeStats.Size, pickaxeStats.Color);
@@ -124,7 +122,7 @@ public class Player
 
 
 
-        // Player color based on state
+
         Color circleColor = CurrentState switch
         {
             PlayerState.Idle => Color.Red,
@@ -150,7 +148,6 @@ public class Player
         if (tip > 0)
         {
             string st = $"Player {CurrentState} ({exp}/{expToNextLevel})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
-           // Raylib.DrawText(st, (int)Position.X - 20, (int)Position.Y - 20, 20, Color.Black);
             
             Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
           
@@ -184,67 +181,42 @@ public class Player
         {
             Position = TargetPosition;
             IsMoving = false;
-            ClampToScreen();
+            ClampToScreen(caravan);
+            ClampToCamera(Program.camera);
             return;
         }
 
         dir = Vector2.Normalize(dir);
         Vector2 nextPos = Position + dir * Speed * dt;
 
-        // Avoid overlap with blocks
         if (!IsOverlappingAnyBlock(nextPos, blocks))
             Position = nextPos;
         else
             IsMoving = false;
 
-        ClampToScreen();
+        ClampToScreen(caravan);
     }
 
     private void UpdateState(float dt, List<Block> blocks)
     {
-        // Example logic if you want the player to hop on the caravan if close enough to its center:
-        if (Vector2.Distance(Position, caravan.Center) < 25f && CurrentState != PlayerState.Crafting)
+        if (CurrentState == PlayerState.Crafting)
         {
-            CurrentState = PlayerState.Riding;
+            return;
         }
 
-        // Or if you want them to ride if they drop below a certain Y:
-        if (Position.Y >= caravan.Y - 100 && CurrentState != PlayerState.Riding)
+        if (IsMoving)
         {
-            CurrentState = PlayerState.Riding;
-            Position = new Vector2(Position.X, caravan.Y - 100);
+            CurrentState = PlayerState.Walking;
         }
-
-        // Basic state transitions:
-        switch (CurrentState)
+        else
         {
-            case PlayerState.Crafting:
-                // No movement or mining while crafting
-                return;
-
-            case PlayerState.Walking:
-                // If we stopped moving, check for mining
-                if (!IsMoving)
-                {
-                    Block closest = GetClosestBlockInRange(blocks);
-                    CurrentState = closest != null ? PlayerState.Mining : PlayerState.Idle;
-                }
-                break;
-
-            default:
-                // If we are moving, we’re walking
-                if (IsMoving)
-                {
-                    CurrentState = PlayerState.Walking;
-                }
-                else
-                {
-                    Block closest = GetClosestBlockInRange(blocks);
-                    CurrentState = closest != null ? PlayerState.Mining : PlayerState.Idle;
-                }
-                break;
+            Block closest = GetClosestBlockInRange(blocks);
+            CurrentState = closest != null ? PlayerState.Mining : PlayerState.Idle;
         }
     }
+
+
+
 
     private Block GetClosestBlockInRange(List<Block> blocks)
     {
@@ -273,10 +245,20 @@ public class Player
         return false;
     }
 
-    private void ClampToScreen()
+    private void ClampToCamera(Camera2D camera)
+    {
+        Vector2 topLeft = Raylib.GetScreenToWorld2D(new Vector2(0, 0), camera);
+        Vector2 bottomRight = Raylib.GetScreenToWorld2D(new Vector2(Program.refWidth, Program.refHeight), camera);
+
+        Position.X = Math.Clamp(Position.X, topLeft.X + Radius, bottomRight.X - Radius);
+        Position.Y = Math.Clamp(Position.Y, topLeft.Y + Radius, bottomRight.Y - Radius);
+    }
+
+
+    private void ClampToScreen(Caravan caravan)
     {
         Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
-        // If you want to clamp Y as well, do so here.
+        Position.Y = Math.Clamp(Position.Y, Radius, (caravan.Y+200) - Radius);
     }
 
     public PickaxeStats GetPickaxeStats()

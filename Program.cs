@@ -63,6 +63,10 @@ public class Block
         }
     }
 
+
+
+
+
     public bool OverlapsCircle(Vector2 pos, float radius)
     {
         float left = X;
@@ -101,8 +105,7 @@ public class Caravan
     public float height;
     private Color color;
 
-    // Provide a read-only Center property for convenience:
-    public Vector2 Center => new Vector2(width / 2, position.Y);
+    public Vector2 Center  => new Vector2(width / 2, position.Y);
     public float Y => position.Y;
 
     public Caravan(int screenWidth, int screenHeight)
@@ -155,12 +158,15 @@ public class Program
     public static List<Block> blocks = new List<Block>();
     public static Caravan caravan;
     public static Player player;
-    static Camera2D camera;
+    public static Camera2D camera;
     public static int Earth = 0;
     static float caravanY;
     static float caravanSpeed = 40f;
     static float distanceThreshold = 250f;
     public static List<Miner> miners = new List<Miner>();
+    Vector2 topLeft = Raylib.GetScreenToWorld2D(new Vector2(0, 0), camera);
+    Vector2 bottomRight = Raylib.GetScreenToWorld2D(new Vector2(Program.refWidth, Program.refHeight), camera);
+
 
     public static void Main()
     {
@@ -255,22 +261,33 @@ public class Program
                 // move
                 player.SetTarget(mouseWorld);
 
-                // broken
-                if (caravan.CheckClick(mouseWorld) && player.CurrentState == PlayerState.Riding)
-                {
-                    player.CurrentState = PlayerState.Crafting;
-                    Console.WriteLine("Crafting");
-
-                }//broken
-                else if (player.CurrentState == PlayerState.Crafting)
-                {
-                    player.CurrentState = PlayerState.Idle;
-                }
 
                 // works
+
+            }
+
+            if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+            {
+
+                Vector2 mouseWorld = GetMousePositionRef();
+
                 foreach (var miner in miners)
                 {
                     miner.CheckClick(mouseWorld);
+                }
+                if (caravan.CheckClick(mouseWorld))
+                {
+
+                    player.CurrentState = PlayerState.Crafting;
+                    player.IsMoving = false;
+                    player.SetTarget(caravan.Center);
+                }
+                else
+                {
+                    player.CurrentState = PlayerState.Walking;
+                    player.SetTarget(mouseWorld);
+
+
                 }
             }
             if (blocks.Count < 300)
@@ -373,27 +390,25 @@ public class Program
     static void UpdateCamera(float dt)
     {
         float smoothSpeed = 5f * dt;
-        Vector2 desiredPosition;
 
-        if (player.CurrentState == PlayerState.Crafting)
-        {
-            desiredPosition = new Vector2(caravan.width / 2, caravan.Y);
-        }
-        else
-        {
-              desiredPosition = player.Position;
-        }
+        Vector2 desiredPosition = player.CurrentState == PlayerState.Crafting
+                                    ? caravan.Center
+                                    : player.Position;
 
-        float minX = refWidth / 2;
-        float maxX = refWidth / 2;
-        desiredPosition.X = Math.Clamp(desiredPosition.X, minX, maxX);
-                
-        float maxY = caravan.Y - caravan.height * 2;
-        desiredPosition.Y = Math.Min(desiredPosition.Y, maxY);
+        if (player.CurrentState != PlayerState.Crafting)
+        {
+
+            float minX = refWidth / 2;
+            float maxX = refWidth / 2;
+            desiredPosition.X = Math.Clamp(desiredPosition.X, minX, maxX);
+
+            float maxY = caravan.Y - caravan.height * 2;
+            desiredPosition.Y = Math.Min(desiredPosition.Y, maxY);
+        }
 
         camera.Target = Vector2.Lerp(camera.Target, desiredPosition, smoothSpeed);
-        camera.Target.Y = Math.Min(camera.Target.Y, maxY);
     }
+
 
     static void MoveCaravanUpIfNeeded(float dt)
     {
