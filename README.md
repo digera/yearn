@@ -5,4 +5,4 @@ req: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
 
 
 https://github.com/digera/yearn/blob/master/bin.zip
-It's unsigned, so Windows Defender might yell.
+It's unsigned, so Windows Defender might yell. I've heard that if you make defender scan it, it will eventually become trusted
