@@ -118,7 +118,6 @@ public class Program
     public static List<Miner> miners = new List<Miner>();
     public static Crusher crusher;
     public static EarthPile earthPile;
-    public static Button upgradeRateButton;
 
     public static void Main()
     {
@@ -127,27 +126,11 @@ public class Program
         Raylib.SetTargetFPS(60);
 
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
+        caravan = new Caravan(refWidth, refHeight);
         crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);
         EarthPile earthPile = new EarthPile(caravan, 50, 50);
         Program.earthPile = earthPile;
 
-            new Vector2(300, crusher.offset.Y +300),  // Use same Y offset as crusher
-            120,
-            40,
-            crusher.HopCost.ToString(),
-            Color.DarkBlue,
-            Color.White
-        );
-
-        upgradeRateButton = new Button(
-            caravan,
-            new Vector2(300, crusher.offset.Y  + 400),  // 60 pixels below first button
-            120,
-            40,
-            crusher.RateCost.ToString(),
-            Color.DarkBrown,
-            Color.White
-        );
         player = new Player(playerStartPos, caravan);
 
         camera = new Camera2D
@@ -196,8 +179,8 @@ public class Program
                     blockY,
                     blockSize,
                     c,
-            earthPile.Update(camera);
-
+                    Block.currentDurabilityMultiplier,
+                    Block.currentYieldBonus));
             }
         }
         nextSetStartY = 400 - (rows - 1) * blockSize;
@@ -213,8 +196,7 @@ public class Program
 
             saveSystem.Update(dt);
             crusher.Update(dt);
-
-
+            earthPile.Update(camera);
 
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
@@ -266,10 +248,10 @@ public class Program
                     {
                         int index = Random.Shared.Next(miners.Count);
                         miners[index].CurrentState = MinerState.Working;
-       
+
                     }
                 }
-               
+
                 else if (caravan.CheckClick(mouseWorld))
                 {
                     player.CurrentState = PlayerState.Crafting;
@@ -301,7 +283,7 @@ public class Program
             foreach (var m in miners)
             {
                 m.Update(dt, blocks);
-            earthPile.Draw(camera);
+            }
 
             MoveCaravanUpIfNeeded(dt);
             UpdateCamera(dt);
@@ -319,8 +301,7 @@ public class Program
             }
             caravan.Draw();
             crusher.Draw();
-            upgradeHopperButton.Draw();
-            upgradeRateButton.Draw();
+            earthPile.Draw(camera);
             player.Draw(dt);
             foreach (var m in miners)
             {
