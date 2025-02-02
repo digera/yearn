@@ -78,7 +78,7 @@ public class Block
                     Mat.ToString(),
                     X + Size / 2 - 25,
                     Y + Size / 2 + 5,
-                    20,
+                    15,
                     Color.Black
                 );
             }
@@ -202,6 +202,7 @@ public class Program
         if (File.Exists("gamestate.json"))
         {
             saveSystem.LoadGame();
+            minerThreshold = 10 * (miners.Count) * 10;
         }
         else
         {

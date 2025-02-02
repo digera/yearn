@@ -34,7 +34,6 @@ public class EarthPile
     /// </summary>
     public Vector2 GetEffectivePosition()
     {
-        // Assuming Caravan.Center returns the world-space center of the caravan.
         return caravan.Center - new Vector2(Width / 2, Height / 2);
     }
 
@@ -61,7 +60,7 @@ public class EarthPile
         // If dragging, update the pile's position to follow the mouse.
         if (isDragging)
         {
-            Position = worldMousePos + dragOffset;
+           // Position = worldMousePos + dragOffset;
         }
         else
         {
@@ -122,7 +121,7 @@ public class EarthPile
         {
             Vector2 mouseScreenPos = Raylib.GetMousePosition();
             Vector2 worldMousePos = Raylib.GetScreenToWorld2D(mouseScreenPos, camera);
-            Raylib.DrawCircleV(worldMousePos, 5, Color.Green);
+            Raylib.DrawCircleV(worldMousePos, 20, Color.Brown);
         }
     }
 }
