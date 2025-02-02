@@ -79,7 +79,7 @@ public class Miner
                         {
                             Program.Earth--;
                             invCount++;
-                            exp = exp + 10;
+                            exp++;
                         }
                     }
                 }
@@ -125,6 +125,7 @@ public class Miner
             exp = 0;
             expToNextLevel += 10 * basePwr;
             basePwr++;
+            Speed++;
         }
 
         if (attn >= attnSpan)

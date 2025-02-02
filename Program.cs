@@ -117,6 +117,7 @@ public class Program
     static float distanceThreshold = 250f;
     public static List<Miner> miners = new List<Miner>();
     public static Crusher crusher;
+    public static EarthPile earthPile;
 
     public static void Main()
     {
@@ -127,6 +128,9 @@ public class Program
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
         crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);
+        EarthPile earthPile = new EarthPile(caravan, 50, 50);
+        Program.earthPile = earthPile;
+
         player = new Player(playerStartPos, caravan);
 
         camera = new Camera2D
@@ -192,6 +196,7 @@ public class Program
 
             saveSystem.Update(dt);
             crusher.Update(dt);
+            earthPile.Update(camera);
 
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
@@ -296,6 +301,7 @@ public class Program
             }
             caravan.Draw();
             crusher.Draw();
+            earthPile.Draw(camera);
             player.Draw(dt);
             foreach (var m in miners)
             {
