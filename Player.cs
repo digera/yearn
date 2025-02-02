@@ -22,8 +22,8 @@ public class Player
     private Caravan caravan;
 
     public int basePwr = 60;
-    private int exp = 0;
-    private int expToNextLevel = 10;
+    public int exp = 0; 
+    public int expToNextLevel = 10;
 
     public Player(Vector2 startPos, Caravan caravan)
     {
@@ -31,6 +31,7 @@ public class Player
         TargetPosition = startPos;
         this.caravan = caravan;
         this.basePwr = basePwr;
+
 
         pickaxeStats = new PickaxeStats(
             speed: 0.75f,

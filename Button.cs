@@ -1,6 +1,6 @@
 ﻿using Raylib_cs;
 using System.Numerics;
-
+//this is deprecated but maybe useful?
 public class Button
 {
     private Caravan caravan;

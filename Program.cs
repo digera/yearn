@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Text.Json.Serialization;
 using Raylib_cs;
 using System.Linq;
+using System.IO;
 
 public enum PlayerState
 {
@@ -35,7 +36,7 @@ public class Block
     public int Size;
     public int Dur;
     public int Yield;
-    public string Mat = "earth";
+    public string Mat = "Earth";
     public Color Color;
 
     public Block(int x, int y, int size, Color color, float durabilityMultiplier, int yieldBonus)
@@ -65,10 +66,6 @@ public class Block
             }
         }
     }
-
-
-
-
 
     public bool OverlapsCircle(Vector2 pos, float radius)
     {
@@ -100,8 +97,6 @@ public struct PickaxeStats
     }
 }
 
-
-
 public class Program
 {
     public static int refWidth = 600;
@@ -121,41 +116,17 @@ public class Program
     static float caravanSpeed = 40f;
     static float distanceThreshold = 250f;
     public static List<Miner> miners = new List<Miner>();
-    Vector2 topLeft = Raylib.GetScreenToWorld2D(new Vector2(0, 0), camera);
-    Vector2 bottomRight = Raylib.GetScreenToWorld2D(new Vector2(Program.refWidth, Program.refHeight), camera);
     public static Crusher crusher;
-    public static Button upgradeHopperButton;
-    public static Button upgradeRateButton;
 
     public static void Main()
     {
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         Raylib.InitWindow(refWidth, refHeight, "Yearn");
-
         Raylib.SetTargetFPS(60);
 
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
-        crusher = new Crusher(caravan);
-        upgradeHopperButton = new Button(
-            caravan,
-            new Vector2(300, crusher.offset.Y +300),  // Use same Y offset as crusher
-            120,
-            40,
-            crusher.HopCost.ToString(),
-            Color.DarkBlue,
-            Color.White
-        );
-
-        upgradeRateButton = new Button(
-            caravan,
-            new Vector2(300, crusher.offset.Y  + 400),  // 60 pixels below first button
-            120,
-            40,
-            crusher.RateCost.ToString(),
-            Color.DarkBrown,
-            Color.White
-        );
+        crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);
         player = new Player(playerStartPos, caravan);
 
         camera = new Camera2D
@@ -167,8 +138,7 @@ public class Program
         };
 
         caravanY = caravan.GetY();
-        SaveSystem saveSystem = new SaveSystem();
-
+        saveSystem = new SaveSystem();
 
         if (File.Exists("gamestate.json"))
         {
@@ -176,13 +146,12 @@ public class Program
         }
         else
         {
-            
             miners.Add(new Miner(
                 new Vector2(refWidth * 0.3f, refHeight * 0.9f),
                 caravan,
                 1,
                 255f,
-                "Alpha"
+                Names.GetUniqueName()
             ));
         }
 
@@ -202,12 +171,12 @@ public class Program
                 int blockX = x * blockSize;
                 int blockY = (refHeight / 2) - y * blockSize;
                 blocks.Add(new Block(
-                                blockX,
-                                blockY,
-                                blockSize,
-                                c,
-                                Block.currentDurabilityMultiplier,
-                                Block.currentYieldBonus));
+                    blockX,
+                    blockY,
+                    blockSize,
+                    c,
+                    Block.currentDurabilityMultiplier,
+                    Block.currentYieldBonus));
             }
         }
         nextSetStartY = 400 - (rows - 1) * blockSize;
@@ -218,63 +187,68 @@ public class Program
         while (!Raylib.WindowShouldClose())
         {
             float dt = Raylib.GetFrameTime();
-            camera.Zoom = (float)Raylib.GetScreenHeight() / (float)refHeight;
+            camera.Zoom = (float)Raylib.GetScreenHeight() / refHeight;
             camera.Offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
-            
+
             saveSystem.Update(dt);
             crusher.Update(dt);
-
-
 
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
                 miners.Add(new Miner(
-                 GetMouseWorld(),
-                 caravan,
-                 Random.Shared.Next(1, 10),    // base power
-                 Random.Shared.Next(75, 200),  // mov
-                 Names.GetUniqueName()
-
-));
+                    GetMouseWorld(),
+                    caravan,
+                    Random.Shared.Next(1, 10),
+                    Random.Shared.Next(75, 200),
+                    Names.GetUniqueName()
+                ));
             }
 
             if (Raylib.IsMouseButtonDown(MouseButton.Left))
             {
                 Vector2 mouseWorld = GetMousePositionRef();
-
-                // move
                 player.SetTarget(mouseWorld);
-
-
-                // works
-
             }
+            // oh my god send help
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                Vector2 mouseWorld = Program.GetMouseWorld();
-                if (Program.crusher.CheckClick(mouseWorld))
+                Vector2 mouseWorld = GetMousePositionRef();
+                if (miners.Count > 0)
+                {
+                    foreach (var miner in miners)
+                    {
+                        miner.CheckClick(mouseWorld);
+                    }
+                }
+                foreach (var miner in miners)
+                {
+                    miner.CheckClick(mouseWorld);
+                }
+
+
+                if (crusher.CheckUpgradeClick(mouseWorld, out int upgradeIndex))
+                {
+                    if (upgradeIndex == 0)
+                    {
+                        crusher.UpgradeHopper();
+                    }
+                    else if (upgradeIndex == 1)
+                    {
+                        crusher.UpgradeConversion();
+                    }
+                }
+                else if (crusher.CheckClick(mouseWorld))
                 {
                     if (miners.Count > 0)
                     {
                         int index = Random.Shared.Next(miners.Count);
                         miners[index].CurrentState = MinerState.Working;
+       
                     }
                 }
-              
-            }
-
-            if (Raylib.IsMouseButtonPressed(MouseButton.Left))
-            {
-
-                Vector2 mouseWorld = GetMousePositionRef();
-
-                foreach (var miner in miners)
+               
+                else if (caravan.CheckClick(mouseWorld))
                 {
-                    miner.CheckClick(mouseWorld);
-                }
-                if (caravan.CheckClick(mouseWorld))
-                {
-
                     player.CurrentState = PlayerState.Crafting;
                     player.IsMoving = false;
                     player.SetTarget(caravan.Center);
@@ -284,30 +258,13 @@ public class Program
                     player.CurrentState = PlayerState.Walking;
                     player.SetTarget(mouseWorld);
 
-
                 }
-                if (upgradeHopperButton.IsClicked(mouseWorld))
-                {
-                    crusher.UpgradeHopper();
-                }
-
-                else if (upgradeRateButton.IsClicked(mouseWorld))
-                {
-                    crusher.UpgradeRate();
-                }
-
-
             }
+
             if (player.Position.Y >= caravan.Y - 100)
             {
                 player.Position = new Vector2(player.Position.X, caravan.Y - 100);
             }
-
-            
-
-
-
-
 
             if (blocks.Count < 300)
             {
@@ -318,10 +275,12 @@ public class Program
                 GenerateNewBlockSet();
             }
             player.Update(dt, blocks);
-            foreach (var m in miners) m.Update(dt, blocks);
+            foreach (var m in miners)
+            {
+                m.Update(dt, blocks);
+            }
 
             MoveCaravanUpIfNeeded(dt);
-            
             UpdateCamera(dt);
 
             Raylib.BeginDrawing();
@@ -331,20 +290,24 @@ public class Program
             Raylib.DrawCircleV(player.TargetPosition, 5, Color.Red);
             Raylib.DrawLineV(player.Position, player.TargetPosition, Color.Red);
 
-            foreach (var b in blocks) b.Draw();
+            foreach (var b in blocks)
+            {
+                b.Draw();
+            }
             caravan.Draw();
             crusher.Draw();
-            upgradeHopperButton.Draw();
-            upgradeRateButton.Draw();
             player.Draw(dt);
-            foreach (var m in miners) m.Draw(dt);
+            foreach (var m in miners)
+            {
+                m.Draw(dt);
+            }
 
             Raylib.EndMode2D();
 
             Raylib.DrawText($"Player Pos: {player.Position.X:F2}, {player.Position.Y:F2}", 10, 10, 20, Color.Black);
             Raylib.DrawText($"Player State: {player.CurrentState}", 10, 30, 20, Color.Black);
             Raylib.DrawText($"Blocks: {blocks.Count}", 10, 50, 20, Color.Black);
-            Raylib.DrawText($"Minors: {miners.Count}", 10, 70, 20, Color.Black);
+            Raylib.DrawText($"Miners: {miners.Count}", 10, 70, 20, Color.Black);
 
             string scoreText = $"Earth: {Earth}";
             Vector2 scoreSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), scoreText, 30, 1);
@@ -412,14 +375,12 @@ public class Program
     static void UpdateCamera(float dt)
     {
         float smoothSpeed = 5f * dt;
-
         Vector2 desiredPosition = player.CurrentState == PlayerState.Crafting
                                     ? caravan.Center
                                     : player.Position;
 
         if (player.CurrentState != PlayerState.Crafting)
         {
-
             float minX = refWidth / 2;
             float maxX = refWidth / 2;
             desiredPosition.X = Math.Clamp(desiredPosition.X, minX, maxX);
@@ -430,7 +391,6 @@ public class Program
 
         camera.Target = Vector2.Lerp(camera.Target, desiredPosition, smoothSpeed);
     }
-
 
     static void MoveCaravanUpIfNeeded(float dt)
     {
