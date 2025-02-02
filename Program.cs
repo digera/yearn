@@ -67,6 +67,20 @@ public class Block
                     Size + (i * 2),
                     Color.Yellow
                 );
+                Raylib.DrawText(
+                    Dur.ToString(),
+                    X + Size / 2 - 10,
+                    Y + Size / 2 - 15,
+                    20,
+                    Color.Black
+                );
+                Raylib.DrawText(
+                    Mat.ToString(),
+                    X + Size / 2 - 25,
+                    Y + Size / 2 + 5,
+                    20,
+                    Color.Black
+                );
             }
         }
     }
@@ -242,9 +256,9 @@ public class Program
 
             if (minerProgress >= minerThreshold)
             {
-                Vector2 SpawnPos = new Vector2(Random.Shared.Next(-80, 80), caravan.Y + Random.Shared.Next(-500, -300));
+                Vector2 SpawnPos = new Vector2(Random.Shared.Next(0, refWidth), caravan.Y + Random.Shared.Next(-1000, -500));
                 minerProgress = 0;
-                minerThreshold = 10 * (miners.Count + 1);
+                minerThreshold = 10 * (miners.Count) * 10;
                 miners.Add(new Miner(
                                     SpawnPos,
                                     caravan,
@@ -372,6 +386,8 @@ public class Program
             Raylib.DrawText($"Caravan Y: {caravan.Y}", 10, 90, 20, Color.Black);
             Raylib.DrawText($"Miner Progress: {minerProgress}", 10, 130, 20, Color.Black);
             Raylib.DrawText($"Miner Threshold: {minerThreshold}", 10, 150, 20, Color.Black);
+            Raylib.DrawText($"CurrentYieldBonus: {Block.currentYieldBonus}", 10, 170, 20, Color.Black);
+            Raylib.DrawText($"CurrentDurabilityMultiplier: {Block.currentDurabilityMultiplier}", 10, 190, 20, Color.Black);
 
             string scoreText = $"Earth: {Earth}";
             Vector2 scoreSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), scoreText, 30, 1);
@@ -400,7 +416,7 @@ public class Program
 
         float startY = nextSetStartY - blockSize;
         Block.currentDurabilityMultiplier *= 1.1f;
-        Block.currentYieldBonus += (int)(Block.currentYieldBonus * 1.1f);
+        Block.currentYieldBonus += (Block.currentYieldBonus /10 )+1;
 
         for (int y = 0; y < newRows; y++)
         {

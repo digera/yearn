@@ -81,7 +81,7 @@ public class EarthPile
                 // If the drop point (world mouse position) is within the crusher's area...
                 if (Raylib.CheckCollisionPointRec(worldMousePos, crusherRect))
                 {
-                    int transferAmount = Math.Min( Program.player.basePwr, Program.Earth);
+                    int transferAmount = Math.Min( (Program.crusher.Hopper - Program.crusher.InputResource), Program.Earth);
                     if (transferAmount > 0)
                     {
                         Program.Earth -= transferAmount;
