@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Raylib_cs;
 using System.Linq;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 public enum PlayerState
 {
@@ -38,6 +39,9 @@ public class Block
     public int Yield;
     public string Mat = "Earth";
     public Color Color;
+    public Vector2 Position => new Vector2(X, Y);
+    public Vector2 Center => new Vector2(X + Size / 2, Y + Size / 2);
+
 
     public Block(int x, int y, int size, Color color, float durabilityMultiplier, int yieldBonus)
     {
@@ -118,7 +122,43 @@ public class Program
     public static List<Miner> miners = new List<Miner>();
     public static Crusher crusher;
     public static EarthPile earthPile;
-    public static Button upgradeRateButton;
+    public static float minerProgress = 0; 
+    public static float minerThreshold = 10;
+    
+    
+    public static void CheckAndRemoveDestroyedBlocks()
+    {
+
+        List<Block> blocksToRemove = new List<Block>();
+
+        foreach (var block in blocks)
+        {
+            if (block.Dur <= 0)
+            {
+                blocksToRemove.Add(block);
+            }
+        }
+
+
+        foreach (var block in blocksToRemove)
+        {
+            blocks.Remove(block);
+
+            OnBlockDestroyed();
+
+        }
+    }
+
+    public static void OnBlockDestroyed()
+    {
+        minerProgress += Random.Shared.Next(1, 10);
+
+
+
+
+
+        
+    }
 
     public static void Main()
     {
@@ -127,27 +167,11 @@ public class Program
         Raylib.SetTargetFPS(60);
 
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
+        caravan = new Caravan(refWidth, refHeight);
         crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);
         EarthPile earthPile = new EarthPile(caravan, 50, 50);
         Program.earthPile = earthPile;
 
-            new Vector2(300, crusher.offset.Y +300),  // Use same Y offset as crusher
-            120,
-            40,
-            crusher.HopCost.ToString(),
-            Color.DarkBlue,
-            Color.White
-        );
-
-        upgradeRateButton = new Button(
-            caravan,
-            new Vector2(300, crusher.offset.Y  + 400),  // 60 pixels below first button
-            120,
-            40,
-            crusher.RateCost.ToString(),
-            Color.DarkBrown,
-            Color.White
-        );
         player = new Player(playerStartPos, caravan);
 
         camera = new Camera2D
@@ -196,8 +220,8 @@ public class Program
                     blockY,
                     blockSize,
                     c,
-            earthPile.Update(camera);
-
+                    Block.currentDurabilityMultiplier,
+                    Block.currentYieldBonus));
             }
         }
         nextSetStartY = 400 - (rows - 1) * blockSize;
@@ -213,9 +237,22 @@ public class Program
 
             saveSystem.Update(dt);
             crusher.Update(dt);
+            earthPile.Update(camera);
 
 
-
+            if (minerProgress >= minerThreshold)
+            {
+                Vector2 SpawnPos = new Vector2(Random.Shared.Next(-80, 80), caravan.Y + Random.Shared.Next(-500, -300));
+                minerProgress = 0;
+                minerThreshold = 10 * (miners.Count + 1);
+                miners.Add(new Miner(
+                                    SpawnPos,
+                                    caravan,
+                                    Random.Shared.Next(1, 10),
+                                    Random.Shared.Next(75, 200),
+                                    Names.GetUniqueName()
+                                    ));
+            }
             if (Raylib.IsKeyPressed(KeyboardKey.E))
             {
                 miners.Add(new Miner(
@@ -266,10 +303,10 @@ public class Program
                     {
                         int index = Random.Shared.Next(miners.Count);
                         miners[index].CurrentState = MinerState.Working;
-       
+
                     }
                 }
-               
+
                 else if (caravan.CheckClick(mouseWorld))
                 {
                     player.CurrentState = PlayerState.Crafting;
@@ -301,7 +338,7 @@ public class Program
             foreach (var m in miners)
             {
                 m.Update(dt, blocks);
-            earthPile.Draw(camera);
+            }
 
             MoveCaravanUpIfNeeded(dt);
             UpdateCamera(dt);
@@ -319,8 +356,7 @@ public class Program
             }
             caravan.Draw();
             crusher.Draw();
-            upgradeHopperButton.Draw();
-            upgradeRateButton.Draw();
+            earthPile.Draw(camera);
             player.Draw(dt);
             foreach (var m in miners)
             {
@@ -333,6 +369,9 @@ public class Program
             Raylib.DrawText($"Player State: {player.CurrentState}", 10, 30, 20, Color.Black);
             Raylib.DrawText($"Blocks: {blocks.Count}", 10, 50, 20, Color.Black);
             Raylib.DrawText($"Miners: {miners.Count}", 10, 70, 20, Color.Black);
+            Raylib.DrawText($"Caravan Y: {caravan.Y}", 10, 90, 20, Color.Black);
+            Raylib.DrawText($"Miner Progress: {minerProgress}", 10, 130, 20, Color.Black);
+            Raylib.DrawText($"Miner Threshold: {minerThreshold}", 10, 150, 20, Color.Black);
 
             string scoreText = $"Earth: {Earth}";
             Vector2 scoreSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), scoreText, 30, 1);

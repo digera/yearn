@@ -22,7 +22,7 @@ public class Player
     private Caravan caravan;
 
     public int basePwr = 60;
-    public int exp = 0; 
+    public int exp = 0;
     public int expToNextLevel = 10;
 
     public Player(Vector2 startPos, Caravan caravan)
@@ -42,13 +42,13 @@ public class Player
         );
     }
 
-    
+
     public void Update(float dt, List<Block> blocks)
     {
         UpdateMovement(dt, blocks);
         UpdateState(dt, blocks);
         UpdatePickaxes(dt, blocks);
-               
+
         if (exp >= expToNextLevel)
         {
             exp = 0;
@@ -59,7 +59,7 @@ public class Player
 
     private void UpdatePickaxes(float dt, List<Block> blocks)
     {
-       for (int i = activePickaxes.Count - 1; i >= 0; i--)
+        for (int i = activePickaxes.Count - 1; i >= 0; i--)
         {
             var (pos, target) = activePickaxes[i];
 
@@ -89,8 +89,10 @@ public class Player
                 }
                 if (target.Dur <= 0)
                 {
+                    Program.OnBlockDestroyed();
                     Program.Earth += target.Yield;
                     blocks.Remove(target);
+
                 }
                 activePickaxes.RemoveAt(i);
             }
@@ -147,14 +149,14 @@ public class Player
             tip -= dt;
         }
 
-        
+
         if (tip > 0)
         {
             string st = $"Player {CurrentState} ({exp}/{expToNextLevel})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
-            
+
             Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
-          
-            
+
+
             Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
             Raylib.DrawText(
                st,
@@ -165,7 +167,7 @@ public class Player
            );
         }
 
-    
+
     }
 
     public void SetTarget(Vector2 pos)
@@ -185,7 +187,7 @@ public class Player
             Position = TargetPosition;
             IsMoving = false;
             ClampToScreen(caravan);
-            
+
             return;
         }
 
@@ -248,6 +250,8 @@ public class Player
         return false;
     }
 
+
+    //I hate this one
     private void ClampToCamera(Camera2D camera)
     {
         Vector2 topLeft = Raylib.GetScreenToWorld2D(new Vector2(0, 0), camera);
@@ -261,7 +265,7 @@ public class Player
     private void ClampToScreen(Caravan caravan)
     {
         Position.X = Math.Clamp(Position.X, Radius, Program.refWidth - Radius);
-       // Position.Y = Math.Clamp(Position.Y, Radius, (caravan.Y+200) - Radius);
+        // Position.Y = Math.Clamp(Position.Y, Radius, (caravan.Y+200) - Radius);
     }
 
     public PickaxeStats GetPickaxeStats()

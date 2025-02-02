@@ -146,6 +146,8 @@ public class SaveSystem
         Program.Earth = gameState.Earth;
         Block.currentDurabilityMultiplier = gameState.DurabilityMultiplier;
         Block.currentYieldBonus = gameState.YieldBonus;
+        
+
 
         // Clear and restore miners.
         Program.miners.Clear();
@@ -172,6 +174,8 @@ public class SaveSystem
                 Program.miners.Add(miner);
             }
         }
+        Program.minerThreshold = 10 * (Program.miners.Count + 1);
+
 
         if (gameState.Player != null && Program.player != null)
         {

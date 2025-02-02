@@ -61,6 +61,13 @@ public class Miner
     {
         if (CurrentState == MinerState.Working)
         {
+            if (exp >= expToNextLevel)
+            {
+                exp = 0;
+                expToNextLevel += 10 * basePwr;
+                basePwr++;
+                Speed++;
+            }
             Vector2 collectionPoint = new Vector2(Program.refWidth / 2, caravan.Y);
 
             if (invCount < invMax)
@@ -196,6 +203,10 @@ public class Miner
             float dist = Vector2.Distance(newPos, targetCenter);
             if (dist <= 5f)
             {
+                if (MinerState.Idle == CurrentState)
+                {
+                    blocks.Remove(target);
+                }else
                 exp++;
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
 
@@ -206,8 +217,10 @@ public class Miner
                 }
                 if (target.Dur <= 0)
                 {
+                    Program.OnBlockDestroyed();
                     invCount += target.Yield;
                     blocks.Remove(target);
+
                 }
                 activePickaxes.RemoveAt(i);
             }
