@@ -15,4 +15,4 @@ E will spawn a new miner.
 
 All miners must be clicked out of idle atm (working as intended but incomplete)
 
-I've gotten over a thousand miners spawned without many performance issues but please be careful and let me know where you find limits please
+if you spawn enough miners to exhaust the names list, you may crash. easy fix, I've been told
