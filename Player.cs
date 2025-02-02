@@ -18,19 +18,20 @@ public class Player
     private PickaxeStats pickaxeStats;
     private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
     private float pickaxeTimer;
-    private const float PICKAXE_INTERVAL = 0.25f;
+    private const float PICKAXE_INTERVAL = 0.25f; //dep hopefully
     private Caravan caravan;
 
     public int basePwr = 60;
-    private int exp = 0;
-    private int expToNextLevel = 10;
+    public int exp = 0; 
+    public int expToNextLevel = 10;
 
     public Player(Vector2 startPos, Caravan caravan)
     {
         Position = startPos;
         TargetPosition = startPos;
         this.caravan = caravan;
-        this.basePwr = basePwr;
+        this.basePwr = basePwr; //do I need?
+
 
         pickaxeStats = new PickaxeStats(
             speed: 0.75f,

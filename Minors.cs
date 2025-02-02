@@ -21,8 +21,8 @@ public class Miner
     private Vector2 direction;
     public int basePwr { get; private set; }
     private Color circleColor = Color.Purple;
-    private int exp = 0;
-    private int expToNextLevel = 10;
+    public int exp = 0;
+    public int expToNextLevel = 10;
 
     public MinerState CurrentState { get; set; } = MinerState.Idle;
 
@@ -42,6 +42,7 @@ public class Miner
         TargetPosition = startPos; 
         this.caravan = caravan;
         this.basePwr = basePwr;
+        
         Speed = speed;
 
         pickaxeStats = new PickaxeStats(
@@ -58,14 +59,12 @@ public class Miner
 
     public void Update(float dt, List<Block> blocks)
     {
-        
         if (CurrentState == MinerState.Working)
         {
-        
             Vector2 collectionPoint = new Vector2(Program.refWidth / 2, caravan.Y);
+
             if (invCount < invMax)
             {
-        
                 Vector2 dir = collectionPoint - Position;
                 if (dir != Vector2.Zero) { dir = Vector2.Normalize(dir); }
                 Position += dir * Speed * dt;
@@ -80,33 +79,32 @@ public class Miner
                         {
                             Program.Earth--;
                             invCount++;
+                            exp = exp + 10;
                         }
                     }
                 }
             }
-            else 
+            else
             {
-                
-                Vector2 crusherDropOff = Program.crusher.GetPosition() + new Vector2(0, 200);
+                Vector2 crusherDropOff = Program.crusher.GetEffectivePosition();
                 Vector2 dir = crusherDropOff - Position;
                 if (dir != Vector2.Zero) { dir = Vector2.Normalize(dir); }
                 Position += dir * Speed * dt;
 
                 if (Vector2.Distance(Position, crusherDropOff) < 5f)
                 {
-                
-                    Program.crusher.ReceiveEarth(invCount);
+                    Program.crusher.ReceiveResource(invCount);
                     invCount = 0;
-                
-                    if (Program.crusher.EarthStored >= Program.crusher.Hopper)
+
+                    if (Program.crusher.InputResource >= Program.crusher.Hopper)
                     {
                         CurrentState = MinerState.MovingUp;
                     }
-                
                 }
             }
             return;
         }
+    
         
         if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(), Position, Radius) || Raylib.IsKeyDown(KeyboardKey.F1))
         {

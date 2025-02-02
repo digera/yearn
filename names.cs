@@ -72,5 +72,52 @@ public struct Names
 
 }
 
+public enum StoneType
+{
+    Earth,
+    Stone,
+    DenseStone,
+    StoneBrick,
+    GreyStone,
+    Carbonite,
+    Mallite,
+    Marble,
+    Granite,
+    Basalt,
+    Obsidian,
+    Limestone,
+    Sandstone,
+    Shale,
+    Slate,
+    Quartzite,
+    Gneiss,
+    Schist,
+    Phyllite,
+    Mica,
+    Talc,
+    Soapstone,
+    Serpentine,
+    Pyroxenite,
+    Dunite,
+    Peridotite,
+    Kimberlite,
+    Rhyolite,
+    Andesite,
+    Diorite,
+    Gabbro,
+    Anorthosite,
+    Syenite,
+    Monzonite,
+    Granodiorite,
+    Pegmatite,
+    Dacite,
+    Trachyte,
+    Phonolite,
+    Tuff,
+    Breccia,
+    Conglomerate,
+    Diamond
+}
+
 
 
