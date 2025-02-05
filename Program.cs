@@ -134,7 +134,8 @@ public class Program
     static float caravanSpeed = 40f;
     static float distanceThreshold = 250f;
     public static List<Miner> miners = new List<Miner>();
-    public static Crusher crusher;
+    public static Sorter sorter;
+    public static List<Crusher> crushers = new List<Crusher>();
     public static EarthPile earthPile;
     public static float minerProgress = 0; 
     public static float minerThreshold = 10;
@@ -182,7 +183,8 @@ public class Program
 
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
-        crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);
+        sorter = new Sorter(caravan, StoneType.Earth, StoneType.Stone);
+        crushers.Add(new Crusher(caravan, StoneType.Stone, StoneType.DenseStone));
         EarthPile earthPile = new EarthPile(caravan, 50, 50);
         Program.earthPile = earthPile;
 
@@ -251,7 +253,11 @@ public class Program
             camera.Offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
 
             saveSystem.Update(dt);
-            crusher.Update(dt);
+            sorter.Update(dt);
+            foreach (var crusher in crushers)
+            {
+                crusher.Update(dt);
+            }
             earthPile.Update(camera);
 
 
@@ -301,24 +307,48 @@ public class Program
                 }
 
 
-                if (crusher.CheckUpgradeClick(mouseWorld, out int upgradeIndex))
+                if (sorter.CheckUpgradeClick(mouseWorld, out int upgradeIndex))
                 {
                     if (upgradeIndex == 0)
                     {
-                        crusher.UpgradeHopper();
+                        sorter.UpgradeHopper();
                     }
                     else if (upgradeIndex == 1)
                     {
-                        crusher.UpgradeConversion();
+                        sorter.UpgradeConversion();
                     }
                 }
-                else if (crusher.CheckClick(mouseWorld))
+                else if (sorter.CheckClick(mouseWorld))
                 {
                     if (miners.Count > 0)
                     {
                         int index = Random.Shared.Next(miners.Count);
                         miners[index].CurrentState = MinerState.Working;
 
+                    }
+                }
+
+                foreach (var crusher in crushers)
+                {
+                    if (crusher.CheckUpgradeClick(mouseWorld, out int upgradeIndex))
+                    {
+                        if (upgradeIndex == 0)
+                        {
+                            crusher.UpgradeHopper();
+                        }
+                        else if (upgradeIndex == 1)
+                        {
+                            crusher.UpgradeConversion();
+                        }
+                    }
+                    else if (crusher.CheckClick(mouseWorld))
+                    {
+                        if (miners.Count > 0)
+                        {
+                            int index = Random.Shared.Next(miners.Count);
+                            miners[index].CurrentState = MinerState.Working;
+
+                        }
                     }
                 }
 
@@ -370,7 +400,11 @@ public class Program
                 b.Draw();
             }
             caravan.Draw();
-            crusher.Draw();
+            sorter.Draw();
+            foreach (var crusher in crushers)
+            {
+                crusher.Draw();
+            }
             earthPile.Draw(camera);
             player.Draw(dt);
             foreach (var m in miners)
