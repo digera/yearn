@@ -189,7 +189,6 @@ public class Program
         caravan = new Caravan(refWidth, refHeight);
         sorter = new Sorter(caravan, StoneType.Earth, StoneType.Stone);
         sorters.Add(sorter);
-        crushers.Add(new Crusher(caravan, StoneType.Stone, StoneType.DenseStone));
         EarthPile earthPile = new EarthPile(caravan, 50, 50);
         Program.earthPile = earthPile;
 
@@ -220,6 +219,7 @@ public class Program
                 255f,
                 Names.GetUniqueName()
             ));
+            crushers.Add(new Crusher(caravan, StoneType.Stone, StoneType.DenseStone)); // P958e
         }
 
         int cols = refWidth / blockSize;
