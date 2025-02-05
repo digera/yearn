@@ -75,18 +75,21 @@ public class EarthPile
             if (isDragging)
             {
                 // Get the crusher's rectangle in world coordinates.
-                Vector2 crusherPos = Program.crusher.GetEffectivePosition();
-                Rectangle crusherRect = new Rectangle(crusherPos.X, crusherPos.Y, Program.crusher.boxWidth, Program.crusher.boxHeight);
-
-                // If the drop point (world mouse position) is within the crusher's area...
-                if (Raylib.CheckCollisionPointRec(worldMousePos, crusherRect))
+                foreach (var crusher in Program.crushers)
                 {
-                    int transferAmount = Math.Min( (Program.crusher.Hopper - Program.crusher.InputResource), Program.Earth);
-                    if (transferAmount > 0)
+                    Vector2 crusherPos = crusher.GetEffectivePosition();
+                    Rectangle crusherRect = new Rectangle(crusherPos.X, crusherPos.Y, crusher.boxWidth, crusher.boxHeight);
+
+                    // If the drop point (world mouse position) is within the crusher's area...
+                    if (Raylib.CheckCollisionPointRec(worldMousePos, crusherRect))
                     {
-                        Program.Earth -= transferAmount;
-                        Program.crusher.ReceiveResource(transferAmount);
-                        Program.player.exp += transferAmount;
+                        int transferAmount = Math.Min((crusher.Hopper - crusher.InputResource), Program.Earth);
+                        if (transferAmount > 0)
+                        {
+                            Program.Earth -= transferAmount;
+                            crusher.ReceiveResource(transferAmount);
+                            Program.player.exp += transferAmount;
+                        }
                     }
                 }
                 // Snap the EarthPile back to the caravan center.
