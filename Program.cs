@@ -139,7 +139,11 @@ public class Program
     public static EarthPile earthPile;
     public static float minerProgress = 0; 
     public static float minerThreshold = 10;
-    
+    public static List<Pile> piles = new List<Pile>();
+    public static List<Sorter> sorters = new List<Sorter>();
+    public static Button purchaseButton;
+    public static int playerResources = 100; // Example resource count for the player
+    public static int crusherCost = 50; // Example cost for a new crusher
     
     public static void CheckAndRemoveDestroyedBlocks()
     {
@@ -184,6 +188,7 @@ public class Program
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
         sorter = new Sorter(caravan, StoneType.Earth, StoneType.Stone);
+        sorters.Add(sorter);
         crushers.Add(new Crusher(caravan, StoneType.Stone, StoneType.DenseStone));
         EarthPile earthPile = new EarthPile(caravan, 50, 50);
         Program.earthPile = earthPile;
@@ -245,6 +250,8 @@ public class Program
         lastBaseRed = 100;
         lastBaseGreen = 100;
         lastBaseBlue = 100;
+
+        purchaseButton = new Button(caravan, new Vector2(10, -50), 100, 30, "Buy Crusher", Color.Green, Color.White);
 
         while (!Raylib.WindowShouldClose())
         {
@@ -435,6 +442,16 @@ public class Program
                 Color.DarkGray
             );
 
+            purchaseButton.Draw();
+            if (Raylib.IsMouseButtonPressed(MouseButton.Left) && purchaseButton.IsClicked(Raylib.GetMousePosition()))
+            {
+                if (playerResources >= crusherCost)
+                {
+                    playerResources -= crusherCost;
+                    AddNewCrusher();
+                }
+            }
+
             Raylib.EndDrawing();
         }
 
@@ -547,5 +564,19 @@ public class Program
     {
         Vector2 screenPos = Raylib.GetMousePosition();
         return Raylib.GetScreenToWorld2D(screenPos, camera);
+    }
+
+    public static void AddNewCrusher()
+    {
+        StoneType inputType = StoneType.Stone; // Example input type
+        StoneType outputType = StoneType.DenseStone; // Example output type
+
+        // Position the new crusher +100 Y from the previous crusher
+        Vector2 newCrusherOffset = new Vector2(10, crushers.Last().offset.Y + 100);
+
+        Crusher newCrusher = new Crusher(caravan, inputType, outputType);
+        newCrusher.offset = newCrusherOffset;
+
+        crushers.Add(newCrusher);
     }
 }
