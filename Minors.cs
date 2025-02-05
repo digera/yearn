@@ -93,19 +93,22 @@ public class Miner
             }
             else
             {
-                Vector2 crusherDropOff = Program.crusher.GetEffectivePosition();
-                Vector2 dir = crusherDropOff - Position;
-                if (dir != Vector2.Zero) { dir = Vector2.Normalize(dir); }
-                Position += dir * Speed * dt;
-
-                if (Vector2.Distance(Position, crusherDropOff) < 5f)
+                foreach (var crusher in Program.crushers)
                 {
-                    Program.crusher.ReceiveResource(invCount);
-                    invCount = 0;
+                    Vector2 crusherDropOff = crusher.GetEffectivePosition();
+                    Vector2 dir = crusherDropOff - Position;
+                    if (dir != Vector2.Zero) { dir = Vector2.Normalize(dir); }
+                    Position += dir * Speed * dt;
 
-                    if (Program.crusher.InputResource >= Program.crusher.Hopper)
+                    if (Vector2.Distance(Position, crusherDropOff) < 5f)
                     {
-                        CurrentState = MinerState.MovingUp;
+                        crusher.ReceiveResource(invCount);
+                        invCount = 0;
+
+                        if (crusher.InputResource >= crusher.Hopper)
+                        {
+                            CurrentState = MinerState.MovingUp;
+                        }
                     }
                 }
             }
