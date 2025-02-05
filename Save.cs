@@ -101,16 +101,21 @@ public class SaveSystem
             },
 
             // Save crusher(s). Here we assume a single crusher for now.
-            Crushers = Program.crushers.Select(c => new GameState.CrusherSaveData
-            {
-                Hopper = c.Hopper,
-                ConversionAmount = c.ConversionAmount,
-                InputResource = c.InputResource,
-                OutputResource = c.OutputResource,
-                InputType = c.InputType,
-                OutputType = c.OutputType
-            }).ToList()
+            Crushers = new List<GameState.CrusherSaveData>()
         };
+
+        if (Program.crusher != null)
+        {
+            gameState.Crushers.Add(new GameState.CrusherSaveData
+            {
+                Hopper = Program.crusher.Hopper,
+                ConversionAmount = Program.crusher.ConversionAmount,
+                InputResource = Program.crusher.InputResource,
+                OutputResource = Program.crusher.OutputResource,
+                InputType = Program.crusher.InputType,
+                OutputType = Program.crusher.OutputType
+            });
+        }
 
         // Serialize to JSON.
         string jsonString = JsonSerializer.Serialize(gameState, new JsonSerializerOptions
@@ -182,15 +187,14 @@ public class SaveSystem
         }
 
         // Restore crusher(s).
-        Program.crushers.Clear();
-        if (gameState.Crushers != null)
+        if (gameState.Crushers != null && gameState.Crushers.Count > 0)
         {
-            foreach (var crusherData in gameState.Crushers)
+            var crusherData = gameState.Crushers[0]; // For now, we assume a single crusher.
+            if (Program.crusher == null)
             {
-                var crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper);
-                crusher.RestoreState(crusherData);
-                Program.crushers.Add(crusher);
+                Program.crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper);
             }
+            Program.crusher.RestoreState(crusherData);
         }
 
         Console.WriteLine("Game loaded!");
