@@ -6,7 +6,7 @@ public class EarthPile
 {
     // Reference to the caravan so we can attach to its center.
     private Caravan caravan;
-    
+
 
     // Position in world coordinates.
     public Vector2 Position;
@@ -60,7 +60,7 @@ public class EarthPile
         // If dragging, update the pile's position to follow the mouse.
         if (isDragging)
         {
-           // Position = worldMousePos + dragOffset;
+            // Position = worldMousePos + dragOffset;
         }
         else
         {
@@ -80,7 +80,7 @@ public class EarthPile
                 // If the drop point (world mouse position) is within the crusher's area...
                 if (Raylib.CheckCollisionPointRec(worldMousePos, crusherRect))
                 {
-                    int transferAmount = Math.Min( (Program.crusher.Hopper - Program.crusher.InputResource), Program.Earth);
+                    int transferAmount = Math.Min((Program.crusher.Hopper - Program.crusher.InputResource), Program.Earth);
                     if (transferAmount > 0)
                     {
                         Program.Earth -= transferAmount;

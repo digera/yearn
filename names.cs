@@ -27,7 +27,10 @@ public struct Names
         "Monkey","Lion","Tiger","Bear","Wolf","Fox","Dog","Cat","Elephant","Giraffe","Horse","Cow","Pig","Sheep","Goat","Chicken","Duck","Goose","Turkey","Penguin","Ostrich","Parrot","Eagle","Hawk","Falcon","Owl","Raven","Crow","Sparrow","Robin","Bluejay","Cardinal","Finch","Canary","Goldfinch","Bullfin"
         ,"Warbler","Wren","Thrush","Swallow","Swift","Hummingbird","Kingfisher","Woodpecker","Nuthatch","Chickadee","Titmouse","Starling","Blackbird","Grackle","Oriole","Tanager","Bunting","Grosbeak","Sparrow","Junco","Snowbird","Bunting",
         "Jaden","Brayden","Caden","Aiden","Kaden","Hayden","Jayden","Zayden","Raiden","Jaxen","Maxen","Paxen","Daxen","Axel","Max","Jax","Dax","Pax","Rex","Tex","Lex","Hex","Vex","Nex","Zex","Xex","Yex","Wex","Qex","Kex","Jex","Bex","Cex","Dex","Fex","Gex",
-        
+        "Bobby","Billy","Ricky","Tommy","Johnny","Jimmy","Timmy","Danny","Manny","Lenny","Kenny","Benny","Jenny","Penny","Denny","Henry","Harry","Samuel","Daniel","David","Joseph","Joshua","Jacob","James","John","Michael","Matthew","Andrew","Anthony","Nicholas","Christopher","Ryan","Justin","Brandon","William","Jonathan","Austin","Kevin","Robert","Thomas","Zachary","Alexander","Cody","Jordan","Kyle","Benjamin","Aaron","Richard","Tyler","Steven","Charles","Patrick","Jeremy","Brian","Eric","Stephen","Adam","Joseph","Dylan","Nathan","Sean","Cameron","Ethan","Christian","Samuel","Jason","Isaac","Caleb","Logan",
+        "Schlomo","Yitzhak","Yosef","Yehuda","Moshe","David","Avraham","Shmuel","Yitzchak","Yakov","Yosef","Yehoshua","Yehuda","Yonatan","Yair","Yisrael","Yehonatan","Yehoyada","Yehoyachin","Yehoram","Yehoshafat","Yehoyakim","Yehoyariv","Yehoyada","Yehoyakin",
+        "Leroy","Lamar","Lionel","Luther","Lloyd","Lyle"
+
 
 
 

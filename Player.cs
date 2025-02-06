@@ -10,7 +10,7 @@ public class Player
     public Vector2 TargetPosition;
     public float Speed = 200f;
     public float Radius = 16f;
-    public const float MINING_RANGE = 64f;
+    public const float MINING_RANGE = 72f;
     public PlayerState CurrentState { get; set; } = PlayerState.Idle;
     public bool IsMoving = false;
     private float tip = 0f;
@@ -178,7 +178,11 @@ public class Player
 
     private void UpdateMovement(float dt, List<Block> blocks)
     {
-        if (!IsMoving) return;
+        if (!IsMoving)
+        {
+            TargetPosition = Position;
+            return;
+        }
 
         Vector2 dir = TargetPosition - Position;
         float dist = dir.Length();
@@ -198,6 +202,7 @@ public class Player
             Position = nextPos;
         else
             IsMoving = false;
+            
 
         ClampToScreen(caravan);
     }

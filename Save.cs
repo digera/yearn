@@ -90,7 +90,7 @@ public class SaveSystem
                 MaxExp = m.expToNextLevel
             }).ToList(),
 
-        
+
             Player = new GameState.PlayerSaveData
             {
                 BasePower = Program.player != null ? Program.player.basePwr : 0,
@@ -146,7 +146,7 @@ public class SaveSystem
         Program.Earth = gameState.Earth;
         Block.currentDurabilityMultiplier = gameState.DurabilityMultiplier;
         Block.currentYieldBonus = gameState.YieldBonus;
-        
+
 
 
         // Clear and restore miners.
@@ -162,7 +162,7 @@ public class SaveSystem
                     minerState.BasePower,
                     minerState.Speed,
                     minerState.MinerName
-                    
+
                 );
                 miner.MinerName = minerState.MinerName;
                 miner.invCount = minerState.InvCount;

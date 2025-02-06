@@ -1,0 +1,74 @@
+{
+  "Earth": 149,
+  "DurabilityMultiplier": 1,
+  "YieldBonus": 20,
+  "Miners": [
+    {
+      "MinerName": "William",
+      "InvCount": 19,
+      "InvMax": 10,
+      "BasePower": 2,
+      "Speed": 256,
+      "PickaxeStats": {
+        "Speed": 0.75,
+        "Size": 3,
+        "MiningPower": 1,
+        "Color": {
+          "R": 200,
+          "G": 122,
+          "B": 255,
+          "A": 255
+        }
+      },
+      "Exp": 9,
+      "MaxExp": 20
+    },
+    {
+      "MinerName": "Willie",
+      "InvCount": 3,
+      "InvMax": 10,
+      "BasePower": 2,
+      "Speed": 143,
+      "PickaxeStats": {
+        "Speed": 0.75,
+        "Size": 3,
+        "MiningPower": 1,
+        "Color": {
+          "R": 200,
+          "G": 122,
+          "B": 255,
+          "A": 255
+        }
+      },
+      "Exp": 3,
+      "MaxExp": 10
+    }
+  ],
+  "Player": {
+    "BasePower": 61,
+    "Speed": 200,
+    "PickaxeStats": {
+      "Speed": 0.75,
+      "Size": 4,
+      "MiningPower": 2,
+      "Color": {
+        "R": 230,
+        "G": 41,
+        "B": 55,
+        "A": 255
+      }
+    },
+    "Exp": 6,
+    "MaxExp": 610
+  },
+  "Crushers": [
+    {
+      "Hopper": 100,
+      "ConversionAmount": 1,
+      "InputResource": 0,
+      "OutputResource": 0,
+      "InputType": 0,
+      "OutputType": 1
+    }
+  ]
+}

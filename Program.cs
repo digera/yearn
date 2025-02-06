@@ -99,21 +99,7 @@ public class Block
     }
 }
 
-public struct PickaxeStats
-{
-    public float Speed { get; set; }
-    public float Size { get; set; }
-    public int MiningPower { get; set; }
-    public Color Color { get; set; }
 
-    public PickaxeStats(float speed, float size, int miningPower, Color? color = null)
-    {
-        Speed = speed;
-        Size = size;
-        MiningPower = miningPower;
-        Color = color ?? Color.Black;
-    }
-}
 
 public class Program
 {
@@ -135,11 +121,13 @@ public class Program
     static float distanceThreshold = 250f;
     public static List<Miner> miners = new List<Miner>();
     public static Crusher crusher;
+    public static List<Crushers> crushers = new List<Crushers>();
     public static EarthPile earthPile;
-    public static float minerProgress = 0; 
+    public static List <EarthPile> earthPiles = new List<EarthPile>();
+    public static float minerProgress = 0;
     public static float minerThreshold = 10;
-    
-    
+
+
     public static void CheckAndRemoveDestroyedBlocks()
     {
 
@@ -171,7 +159,7 @@ public class Program
 
 
 
-        
+
     }
 
     public static void Main()
@@ -183,6 +171,7 @@ public class Program
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
         crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);
+        crushers.Add(new Crushers(caravan, (StoneType)crushers.Count, (StoneType)(crushers.Count+1)));
         EarthPile earthPile = new EarthPile(caravan, 50, 50);
         Program.earthPile = earthPile;
 
@@ -276,6 +265,16 @@ public class Program
                     Random.Shared.Next(1, 10),
                     Random.Shared.Next(75, 200),
                     Names.GetUniqueName()
+                ));
+            }
+            if (Raylib.IsKeyPressed(KeyboardKey.C))
+            {
+             crushers.Add(new Crushers(
+                    caravan,
+                    (StoneType)crushers.Count,
+                    (StoneType)(crushers.Count + 1)
+
+
                 ));
             }
 
@@ -417,7 +416,7 @@ public class Program
 
         float startY = nextSetStartY - blockSize;
         Block.currentDurabilityMultiplier *= 1.1f;
-        Block.currentYieldBonus += (Block.currentYieldBonus /10 )+1;
+        Block.currentYieldBonus += (Block.currentYieldBonus / 10) + 1;
 
         for (int y = 0; y < newRows; y++)
         {

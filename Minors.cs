@@ -24,9 +24,12 @@ public class Miner
     public int exp = 0;
     public int expToNextLevel = 10;
 
+    public Crusher TargetCrusher { get; set; }
+
     public MinerState CurrentState { get; set; } = MinerState.Idle;
 
     public PickaxeStats pickaxeStats;
+    public CanisterStats canisterStats;
     private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
     private float pickaxeTimer;
 
@@ -51,6 +54,12 @@ public class Miner
             miningPower: 1,
             color: Color.Purple
         );
+        canisterStats = new CanisterStats(
+            speed: 10,
+            capacity: 10,
+            color: Color.Orange);
+
+
 
         float angleRadians = (-90 + Raylib.GetRandomValue(-60, 60)) * MathF.PI / 180f;
         direction = new Vector2(MathF.Cos(angleRadians), MathF.Sin(angleRadians));
@@ -70,13 +79,13 @@ public class Miner
             }
             Vector2 collectionPoint = new Vector2(Program.refWidth / 2, caravan.Y);
 
-            if (invCount < invMax)
+            if (invCount < (invMax+ canisterStats.Capacity))
             {
                 Vector2 dir = collectionPoint - Position;
                 if (dir != Vector2.Zero) { dir = Vector2.Normalize(dir); }
                 Position += dir * Speed * dt;
 
-                if (Vector2.Distance(Position, collectionPoint) < 5f)
+                if (Vector2.Distance(Position, collectionPoint) < 9f)
                 {
                     workingFillTimer += dt;
                     if (workingFillTimer >= 0.25f)
@@ -87,6 +96,11 @@ public class Miner
                             Program.Earth--;
                             invCount++;
                             exp++;
+                        }
+                        else
+                        {
+                            CurrentState = MinerState.Returning;
+                            return;
                         }
                     }
                 }
@@ -123,7 +137,7 @@ public class Miner
         }
 
         attn += dt;
-        if (invCount >= invMax)
+        if (invCount >= (invMax +canisterStats.Capacity))
         {
             CurrentState = MinerState.Returning;
         }
@@ -338,7 +352,7 @@ public class Miner
         if (tip > 0)
         {
             Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
-            string st = $"{MinerName} {CurrentState} ({invCount}/{invMax})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
+            string st = $"{MinerName} {CurrentState} ({invCount}/{invMax}+{canisterStats.Capacity})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
             Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
             Raylib.DrawText(
                 st,
