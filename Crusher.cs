@@ -2,8 +2,6 @@
 using System;
 using System.Numerics;
 
-
-
 public class Crusher
 {
     private Caravan caravan;
@@ -41,8 +39,8 @@ public class Crusher
         this.boxWidth = boxWidth;
         this.boxHeight = boxHeight;
         offset = new Vector2(10, 10);
-        InputType = inputType;
-        OutputType = outputType;
+        InputType = StoneType.Earth;
+        OutputType = StoneType.Stone;
 
         // enum in names
         InputResourceName = inputType.ToString();
@@ -171,13 +169,6 @@ public class Crusher
  
 }
 
-
-
-
-
-
-
-
 public class Crushers
 {
     private Caravan caravan;
@@ -196,7 +187,7 @@ public class Crushers
     // Visuals
     public int boxWidth;
     public int boxHeight;
-    private int extraYOffset => 200 * Program.crushers.Count;
+    private int initialYOffset;
     private const int buttonSize = 20;
     private const int buttonMargin = 5;
 
@@ -221,13 +212,15 @@ public class Crushers
         // enum in names
         InputResourceName = inputType.ToString();
         OutputResourceName = outputType.ToString();
+
+        initialYOffset = (int)(caravan.Y - caravan.height);
     }
 
     // Get the base position from the caravan, then adjust it by an offset and then an extra offset lol shut up math is hard
     public Vector2 GetEffectivePosition()
     {
         float caravanTop = caravan.Y - caravan.height;
-        return new Vector2(0, caravanTop) + offset + new Vector2(0, extraYOffset);
+        return new Vector2(0, caravanTop) + offset + new Vector2(0, initialYOffset);
     }
 
     public void Draw()
