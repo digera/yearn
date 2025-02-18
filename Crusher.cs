@@ -116,8 +116,9 @@ public class Crusher
 
     public void ReceiveResource(int amount)
     {
-        // InputResource = Math.Min(InputResource + amount, Hopper);
-        Program.stoneCounts[(int)StoneType.Stone] = Math.Min(Program.stoneCounts[(int)StoneType.Stone] + amount, Hopper);
+        InputResource = Math.Min(InputResource + amount, Hopper);
+        //Program.stoneCounts[(int)StoneType.Stone] = Math.Min(Program.stoneCounts[(int)StoneType.Stone] + amount, Hopper);
+
     }
 
 
@@ -131,8 +132,8 @@ public class Crusher
                 conversionTimer -= 1.0f;
                 int converted = Math.Min(InputResource, (int)ConversionAmount);
                 InputResource -= converted;
-                Program.stoneCounts[(int)StoneType.Stone] += converted;
-                //OutputResource += converted;
+                //Program.stoneCounts[(int)StoneType.Stone] += converted;
+                OutputResource += converted;
 
             }
         }
@@ -161,7 +162,8 @@ public class Crusher
         if (OutputResource >= ConversionUpgradeCost)
         {
             OutputResource -= ConversionUpgradeCost;
-            ConversionAmount = ConversionAmount + ConversionAmount;
+            // ConversionAmount = ConversionAmount + ConversionAmount;
+            ConversionAmount += 1;
         }
     }
     public void RestoreState(GameState.CrusherSaveData data)

@@ -117,7 +117,7 @@ public class EarthPile
         Raylib.DrawRectangle((int)Position.X, (int)Position.Y, Width, Height, Color.Brown);
         // Display the global earth count.
         //Raylib.DrawText($"Earth: {Program.Earth}", (int)Position.X + 5, (int)Position.Y + 5, 10, Color.White);
-        //Raylib.DrawText($"Earth: {Program.stoneCounts[(int)StoneType.Earth]}", (int)Position.X + 5, (int)Position.Y + 5, 10, Color.White);
+        Raylib.DrawText($"Earth: {Program.stoneCounts[(int)StoneType.Earth]}", (int)Position.X + 5, (int)Position.Y + 5, 10, Color.White);
 
         // If dragging, draw a small circle at the mouse cursor.
         if (isDragging)
