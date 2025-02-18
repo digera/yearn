@@ -115,7 +115,7 @@ public class Program
     public static Caravan caravan;
     public static Player player;
     public static Camera2D camera;
-    public static int Earth = 0;
+    //public static int Earth = 0;
     static float caravanY;
     static float caravanSpeed = 40f;
     static float distanceThreshold = 250f;
@@ -123,9 +123,13 @@ public class Program
     public static Crusher crusher;
     public static List<Crushers> crushers = new List<Crushers>();
     public static EarthPile earthPile;
-    public static List <EarthPile> earthPiles = new List<EarthPile>();
+    public static List<EarthPile> earthPiles = new List<EarthPile>();
     public static float minerProgress = 0;
     public static float minerThreshold = 10;
+    //Dictionary<StoneType, int> stoneCounts = new Dictionary<StoneType, int>();
+    // public static List<StoneType> stoneTypes = Enum.GetValues(typeof(StoneType)).Cast<StoneType>().ToList();
+  //public int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
+    public static int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
 
 
     public static void CheckAndRemoveDestroyedBlocks()
@@ -155,11 +159,6 @@ public class Program
     {
         minerProgress += Random.Shared.Next(1, 10);
 
-
-
-
-
-
     }
 
     public static void Main()
@@ -171,7 +170,7 @@ public class Program
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
         crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);
-        crushers.Add(new Crushers(caravan, (StoneType)crushers.Count, (StoneType)(crushers.Count+1)));
+        crushers.Add(new Crushers(caravan, (StoneType)crushers.Count, (StoneType)(crushers.Count + 1)));
         EarthPile earthPile = new EarthPile(caravan, 50, 50);
         Program.earthPile = earthPile;
 
@@ -269,13 +268,13 @@ public class Program
             }
             if (Raylib.IsKeyPressed(KeyboardKey.C))
             {
-             crushers.Add(new Crushers(
-                    caravan,
-                    (StoneType)crushers.Count,
-                    (StoneType)(crushers.Count + 1)
+                crushers.Add(new Crushers(
+                       caravan,
+                       (StoneType)crushers.Count,
+                       (StoneType)(crushers.Count + 1)
 
 
-                ));
+                   ));
             }
 
             if (Raylib.IsMouseButtonDown(MouseButton.Left))
@@ -389,7 +388,7 @@ public class Program
             Raylib.DrawText($"CurrentYieldBonus: {Block.currentYieldBonus}", 10, 170, 20, Color.Black);
             Raylib.DrawText($"CurrentDurabilityMultiplier: {Block.currentDurabilityMultiplier}", 10, 190, 20, Color.Black);
 
-            string scoreText = $"Earth: {Earth}";
+            string scoreText = $"Earth: {stoneCounts[(int)StoneType.Earth]}";
             Vector2 scoreSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), scoreText, 30, 1);
             float screenCenterX = Raylib.GetScreenWidth() / 2f;
             Raylib.DrawText(

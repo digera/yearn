@@ -7,7 +7,8 @@ using System.Text.Json;
 
 public class GameState
 {
-    public int Earth { get; set; }
+    //public int Earth { get; set; }
+    public int[] StoneCounts { get; set; }
     public float DurabilityMultiplier { get; set; }
     public int YieldBonus { get; set; }
 
@@ -73,7 +74,8 @@ public class SaveSystem
     {
         var gameState = new GameState
         {
-            Earth = Program.Earth,
+            //Earth = Program.Earth,
+            StoneCounts = Program.stoneCounts,
             DurabilityMultiplier = Block.currentDurabilityMultiplier,
             YieldBonus = Block.currentYieldBonus,
 
@@ -143,7 +145,8 @@ public class SaveSystem
             return;
 
         // Restore global stats.
-        Program.Earth = gameState.Earth;
+        //Program.Earth = gameState.Earth;
+        Program.stoneCounts = gameState.StoneCounts;
         Block.currentDurabilityMultiplier = gameState.DurabilityMultiplier;
         Block.currentYieldBonus = gameState.YieldBonus;
 

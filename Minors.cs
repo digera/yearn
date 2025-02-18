@@ -42,10 +42,10 @@ public class Miner
     {
         MinerName = minerName;
         Position = startPos;
-        TargetPosition = startPos; 
+        TargetPosition = startPos;
         this.caravan = caravan;
         this.basePwr = basePwr;
-        
+
         Speed = speed;
 
         pickaxeStats = new PickaxeStats(
@@ -79,7 +79,7 @@ public class Miner
             }
             Vector2 collectionPoint = new Vector2(Program.refWidth / 2, caravan.Y);
 
-            if (invCount < (invMax+ canisterStats.Capacity))
+            if (invCount < (invMax + canisterStats.Capacity))
             {
                 Vector2 dir = collectionPoint - Position;
                 if (dir != Vector2.Zero) { dir = Vector2.Normalize(dir); }
@@ -91,9 +91,10 @@ public class Miner
                     if (workingFillTimer >= 0.25f)
                     {
                         workingFillTimer = 0;
-                        if (Program.Earth > 0)
+                        //if (StoneType.Earth > 0)
+                        if (Program.stoneCounts[(int)StoneType.Earth] > 0)
                         {
-                            Program.Earth--;
+                            Program.stoneCounts[(int)StoneType.Earth]--;
                             invCount++;
                             exp++;
                         }
@@ -125,8 +126,8 @@ public class Miner
             }
             return;
         }
-    
-        
+
+
         if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(), Position, Radius) || Raylib.IsKeyDown(KeyboardKey.F1))
         {
             tip = tipSpan;
@@ -137,7 +138,7 @@ public class Miner
         }
 
         attn += dt;
-        if (invCount >= (invMax +canisterStats.Capacity))
+        if (invCount >= (invMax + canisterStats.Capacity))
         {
             CurrentState = MinerState.Returning;
         }
@@ -169,7 +170,7 @@ public class Miner
                 ReturnToCaravan(dt);
                 break;
         }
-        
+
 
         UpdatePickaxes(dt, blocks);
     }
@@ -220,8 +221,9 @@ public class Miner
                 if (MinerState.Idle == CurrentState)
                 {
                     blocks.Remove(target);
-                }else
-                exp++;
+                }
+                else
+                    exp++;
                 target.Dur -= pickaxeStats.MiningPower + basePwr;
 
                 if (target.Yield > 1)
@@ -294,7 +296,8 @@ public class Miner
     {
         if (IsOverlappingCaravan())
         {
-            Program.Earth += invCount;
+            //StoneType.Earth += invCount;
+            Program.stoneCounts[(int)StoneType.Earth] += invCount;
             invCount = 0;
             CurrentState = MinerState.MovingUp;
             return;

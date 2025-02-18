@@ -85,12 +85,14 @@ public class Player
                 if (target.Yield > 0)
                 {
                     target.Yield--;
-                    Program.Earth++;
+                    //Program.Earth++;
+                    Program.stoneCounts[(int)StoneType.Earth]++;
                 }
                 if (target.Dur <= 0)
                 {
                     Program.OnBlockDestroyed();
-                    Program.Earth += target.Yield;
+                    //Program.Earth += target.Yield;
+                    Program.stoneCounts[(int)StoneType.Earth] += target.Yield;
                     blocks.Remove(target);
 
                 }
@@ -202,7 +204,7 @@ public class Player
             Position = nextPos;
         else
             IsMoving = false;
-            
+
 
         ClampToScreen(caravan);
     }

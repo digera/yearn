@@ -80,10 +80,12 @@ public class EarthPile
                 // If the drop point (world mouse position) is within the crusher's area...
                 if (Raylib.CheckCollisionPointRec(worldMousePos, crusherRect))
                 {
-                    int transferAmount = Math.Min((Program.crusher.Hopper - Program.crusher.InputResource), Program.Earth);
+                    // int transferAmount = Math.Min((Program.crusher.Hopper - Program.crusher.InputResource), Program.Earth);
+                    int transferAmount = Math.Min((Program.crusher.Hopper - Program.crusher.InputResource), Program.stoneCounts[(int)StoneType.Earth]);
                     if (transferAmount > 0)
                     {
-                        Program.Earth -= transferAmount;
+                        //Program.Earth -= transferAmount;
+                        Program.stoneCounts[(int)StoneType.Earth] -= transferAmount;
                         Program.crusher.ReceiveResource(transferAmount);
                         Program.player.exp += transferAmount;
                     }
@@ -114,7 +116,8 @@ public class EarthPile
         // Draw the EarthPile rectangle.
         Raylib.DrawRectangle((int)Position.X, (int)Position.Y, Width, Height, Color.Brown);
         // Display the global earth count.
-        Raylib.DrawText($"Earth: {Program.Earth}", (int)Position.X + 5, (int)Position.Y + 5, 10, Color.White);
+        //Raylib.DrawText($"Earth: {Program.Earth}", (int)Position.X + 5, (int)Position.Y + 5, 10, Color.White);
+        //Raylib.DrawText($"Earth: {Program.stoneCounts[(int)StoneType.Earth]}", (int)Position.X + 5, (int)Position.Y + 5, 10, Color.White);
 
         // If dragging, draw a small circle at the mouse cursor.
         if (isDragging)
