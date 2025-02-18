@@ -167,6 +167,8 @@ public class Program
         Raylib.InitWindow(refWidth, refHeight, "Yearn");
         Raylib.SetTargetFPS(60);
 
+
+        stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
         crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);

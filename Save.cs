@@ -146,7 +146,7 @@ public class SaveSystem
 
         // Restore global stats.
         //Program.Earth = gameState.Earth;
-        Program.stoneCounts = gameState.StoneCounts;
+        Program.stoneCounts = gameState.StoneCounts ?? new int[Enum.GetValues(typeof(StoneType)).Length];
         Block.currentDurabilityMultiplier = gameState.DurabilityMultiplier;
         Block.currentYieldBonus = gameState.YieldBonus;
 
@@ -192,7 +192,7 @@ public class SaveSystem
         // Restore crusher(s).
         if (gameState.Crushers != null && gameState.Crushers.Count > 0)
         {
-            var crusherData = gameState.Crushers[0]; // For now, we assume a single crusher.
+            var crusherData = gameState.Crushers[0];
             if (Program.crusher == null)
             {
                 Program.crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper);
