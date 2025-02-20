@@ -7,7 +7,6 @@ using System.Text.Json;
 
 public class GameState
 {
-    //public int Earth { get; set; }
     public int[] StoneCounts { get; set; }
     public float DurabilityMultiplier { get; set; }
     public int YieldBonus { get; set; }
@@ -74,7 +73,6 @@ public class SaveSystem
     {
         var gameState = new GameState
         {
-            //Earth = Program.Earth,
             StoneCounts = Program.stoneCounts,
             DurabilityMultiplier = Block.currentDurabilityMultiplier,
             YieldBonus = Block.currentYieldBonus,
@@ -102,22 +100,17 @@ public class SaveSystem
                 MaxExp = Program.player != null ? Program.player.expToNextLevel : 0
             },
 
-            // Save crusher(s). Here we assume a single crusher for now.
-            Crushers = new List<GameState.CrusherSaveData>()
-        };
-
-        if (Program.crusher != null)
-        {
-            gameState.Crushers.Add(new GameState.CrusherSaveData
+            // Save multiple crushers.
+            Crushers = Program.crushers.Select(c => new GameState.CrusherSaveData
             {
-                Hopper = Program.crusher.Hopper,
-                ConversionAmount = Program.crusher.ConversionAmount,
-                InputResource = Program.crusher.InputResource,
-                OutputResource = Program.crusher.OutputResource,
-                InputType = Program.crusher.InputType,
-                OutputType = Program.crusher.OutputType
-            });
-        }
+                Hopper = c.Hopper,
+                ConversionAmount = c.ConversionAmount,
+                InputResource = c.InputResource,
+                OutputResource = c.OutputResource,
+                InputType = c.InputType,
+                OutputType = c.OutputType
+            }).ToList()
+        };
 
         // Serialize to JSON.
         string jsonString = JsonSerializer.Serialize(gameState, new JsonSerializerOptions
@@ -145,12 +138,9 @@ public class SaveSystem
             return;
 
         // Restore global stats.
-        //Program.Earth = gameState.Earth;
         Program.stoneCounts = gameState.StoneCounts ?? new int[Enum.GetValues(typeof(StoneType)).Length];
         Block.currentDurabilityMultiplier = gameState.DurabilityMultiplier;
         Block.currentYieldBonus = gameState.YieldBonus;
-
-
 
         // Clear and restore miners.
         Program.miners.Clear();
@@ -165,7 +155,6 @@ public class SaveSystem
                     minerState.BasePower,
                     minerState.Speed,
                     minerState.MinerName
-
                 );
                 miner.MinerName = minerState.MinerName;
                 miner.invCount = minerState.InvCount;
@@ -179,7 +168,6 @@ public class SaveSystem
         }
         Program.minerThreshold = 10 * (Program.miners.Count + 1);
 
-
         if (gameState.Player != null && Program.player != null)
         {
             Program.player.basePwr = gameState.Player.BasePower;
@@ -189,15 +177,16 @@ public class SaveSystem
             Program.player.expToNextLevel = gameState.Player.MaxExp;
         }
 
-        // Restore crusher(s).
-        if (gameState.Crushers != null && gameState.Crushers.Count > 0)
+        // Restore multiple crushers.
+        Program.crushers.Clear();
+        if (gameState.Crushers != null)
         {
-            var crusherData = gameState.Crushers[0];
-            if (Program.crusher == null)
+            foreach (var crusherData in gameState.Crushers)
             {
-                Program.crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper);
+                var crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper);
+                crusher.RestoreState(crusherData);
+                Program.crushers.Add(crusher);
             }
-            Program.crusher.RestoreState(crusherData);
         }
 
         Console.WriteLine("Game loaded!");
