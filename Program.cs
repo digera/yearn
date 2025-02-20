@@ -199,7 +199,7 @@ public class Program
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
         //crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);
-        crushers.Add(new Crusher(caravan, StoneType.Earth, StoneType.Stone));
+        crushers.Add(new Crusher(caravan, StoneType.Earth, StoneType.Stone, 100, 50, 50, 200, 0));
         EarthPile earthPile = new EarthPile(caravan, 50, 50);
         Program.earthPile = earthPile;
 
@@ -303,14 +303,16 @@ public class Program
             }
             if (Raylib.IsKeyPressed(KeyboardKey.C))
             {
+                int newCrusherID = crushers.Count;
                 crushers.Add(new Crusher(
                        caravan,
                        (StoneType)crushers.Count,
-                       (StoneType)(crushers.Count + 1),
+                       (StoneType)(crushers.Count+1 ),
                        100,
                        50,
                        50,
-                       crushers.Count * 60
+                       newCrusherID * 100,
+                       newCrusherID
                    ));
             }
 

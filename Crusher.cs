@@ -30,9 +30,11 @@ public class Crusher
     private readonly float hopperUpgradeMultiplier = 1.05f;
     private readonly float conversionUpgradeMultiplier = 1.05f;
 
+    public int ID { get; set; }
+
     // each crusher has unique inputType and outputType, iterations from the enum in names
     public Crusher(Caravan caravan, StoneType inputType, StoneType outputType,
-                   int hopper = 100, int boxWidth = 50, int boxHeight = 50, int extraYOffset = 0)
+                   int hopper = 100, int boxWidth = 50, int boxHeight = 50, int extraYOffset = 0, int iD = 0)
     {
         this.caravan = caravan;
         Hopper = hopper;
@@ -48,6 +50,7 @@ public class Crusher
         InputResourceName = inputType.ToString();
         OutputResourceName = outputType.ToString();
         this.extraYOffset = extraYOffset;
+        ID = iD;
     }
 
     // Get the base position from the caravan, then adjust it by an offset and then an extra offset lol shut up math is hard
@@ -86,7 +89,7 @@ public class Crusher
         Raylib.DrawText(cost, x + 2, y + 2, 8, Color.White);
     }
 
-    // TODO: move CheckClick and many other methods to a utility class -- each class has its own and they're all slightly different
+    // TODO: move CheckClick and many other methods to a utility class -- each class has its own and they're all slightly different and use the Raylib.CheckCollisionPointRec method 
     public bool CheckClick(Vector2 mousePos)
     {
         Vector2 pos = GetEffectivePosition();
@@ -94,6 +97,7 @@ public class Crusher
                mousePos.X <= pos.X + boxWidth &&
                mousePos.Y >= pos.Y &&
                mousePos.Y <= pos.Y + boxHeight;
+        //     Raylib.CheckCollisionPointRec(mousePos, new Rectangle(pos.X, pos.Y, boxWidth, boxHeight));
     }
 
     // Out parameter upgradeIndex tells which upgrade was selected (0 = Hopper, 1 = Conversion).
@@ -117,9 +121,11 @@ public class Crusher
 
     public void ReceiveResource(int amount)
     {
-        InputResource = Math.Min(InputResource + amount, Hopper);
-        //Program.stoneCounts[(int)StoneType.Stone] = Math.Min(Program.stoneCounts[(int)StoneType.Stone] + amount, Hopper);
-
+        if (InputType == (StoneType)ID)
+        {
+            InputResource = Math.Min(InputResource + amount, Hopper);
+            //Program.stoneCounts[(int)StoneType.Stone] = Math.Min(Program.stoneCounts[(int)StoneType.Stone] + amount, Hopper);
+        }
     }
 
 

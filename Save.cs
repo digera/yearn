@@ -50,6 +50,7 @@ public class GameState
         public int OutputResource { get; set; }
         public StoneType InputType { get; set; }
         public StoneType OutputType { get; set; }
+        public int ID { get; set; }
     }
 }
 
@@ -108,7 +109,8 @@ public class SaveSystem
                 InputResource = c.InputResource,
                 OutputResource = c.OutputResource,
                 InputType = c.InputType,
-                OutputType = c.OutputType
+                OutputType = c.OutputType,
+                ID = c.ID
             }).ToList()
         };
 
@@ -183,7 +185,7 @@ public class SaveSystem
         {
             foreach (var crusherData in gameState.Crushers)
             {
-                var crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper);
+                var crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper, 50, 50, crusherData.ID * 100, crusherData.ID);
                 crusher.RestoreState(crusherData);
                 Program.crushers.Add(crusher);
             }
