@@ -311,7 +311,7 @@ public class Program
                        100,
                        50,
                        50,
-                       newCrusherID * 100,
+                       (newCrusherID * 100)+200,
                        newCrusherID
                    ));
             }
@@ -321,34 +321,35 @@ public class Program
                 Vector2 mouseWorld = GetMousePositionRef();
                 player.SetTarget(mouseWorld);
             }
-            // oh my god send help
+            // oh my god send help -- update, jippity pulled through
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
                 Vector2 mouseWorld = GetMousePositionRef();
-                if (miners.Count > 0)
+
+                // Process miner clicks (each miner is processed twice in separate passes)
+                foreach (var miner in miners)
                 {
-                    foreach (var miner in miners)
-                    {
-                        miner.CheckClick(mouseWorld);
-                    }
+                    miner.CheckClick(mouseWorld);
                 }
                 foreach (var miner in miners)
                 {
                     miner.CheckClick(mouseWorld);
                 }
 
+                // Process crushers: either perform an upgrade or, if clicked, set a random miner to Working.
                 foreach (var crusher in crushers)
                 {
                     if (crusher.CheckUpgradeClick(mouseWorld, out int upgradeIndex))
                     {
-                        if (upgradeIndex == 0)
+                        switch (upgradeIndex)
                         {
-                            crusher.UpgradeHopper();
-                        }
-                        else if (upgradeIndex == 1)
-                        {
-                            crusher.UpgradeConversion();
+                            case 0:
+                                crusher.UpgradeHopper();
+                                break;
+                            case 1:
+                                crusher.UpgradeConversion();
+                                break;
                         }
                     }
                     else if (crusher.CheckClick(mouseWorld))
@@ -357,11 +358,12 @@ public class Program
                         {
                             int index = Random.Shared.Next(miners.Count);
                             miners[index].CurrentState = MinerState.Working;
-
                         }
                     }
                 }
 
+                // Process caravan click: if the caravan was clicked, set the player to Crafting and target the caravan center;
+                // otherwise, set the player to Walking and target the mouse position.
                 if (caravan.CheckClick(mouseWorld))
                 {
                     player.CurrentState = PlayerState.Crafting;
@@ -372,9 +374,9 @@ public class Program
                 {
                     player.CurrentState = PlayerState.Walking;
                     player.SetTarget(mouseWorld);
-
                 }
             }
+
 
             if (player.Position.Y >= caravan.Y - 100)
             {

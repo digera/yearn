@@ -53,7 +53,7 @@ public class Crusher
         ID = iD;
     }
 
-    // Get the base position from the caravan, then adjust it by an offset and then an extra offset lol shut up math is hard
+    // Get the base position from the caravan
     public Vector2 GetEffectivePosition()
     {
         float caravanTop = caravan.Y - caravan.height;

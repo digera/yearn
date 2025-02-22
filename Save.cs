@@ -185,7 +185,7 @@ public class SaveSystem
         {
             foreach (var crusherData in gameState.Crushers)
             {
-                var crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper, 50, 50, crusherData.ID * 100, crusherData.ID);
+                var crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper, 50, 50, (crusherData.ID * 100)+200, crusherData.ID);
                 crusher.RestoreState(crusherData);
                 Program.crushers.Add(crusher);
             }
