@@ -200,7 +200,7 @@ public class Program
         caravan = new Caravan(refWidth, refHeight);
         //crusher = new Crusher(caravan, StoneType.Earth, StoneType.Stone);
         crushers.Add(new Crusher(caravan, StoneType.Earth, StoneType.Stone, 100, 50, 50, 200, 0));
-        EarthPile earthPile = new EarthPile(caravan, 50, 50);
+        EarthPile earthPile = new EarthPile(caravan, 50, 50, 0);
         Program.earthPile = earthPile;
 
         player = new Player(playerStartPos, caravan);
@@ -272,7 +272,12 @@ public class Program
 
             saveSystem.Update(dt);
             //crusher.Update(dt);
-            earthPile.Update(camera);
+           // earthPile.Update(camera);
+           foreach (StoneType stoneType in Enum.GetValues(typeof(StoneType)))
+            {
+                EarthPile stonePile = new EarthPile(caravan, 50, 50, stoneType);
+                earthPiles.Add(stonePile);
+            }
             foreach (var crusher in crushers)
             {
                 crusher.Update(dt);

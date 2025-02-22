@@ -17,6 +17,9 @@ public class GameState
     // Save data for crushers.
     public List<CrusherSaveData> Crushers { get; set; }
 
+    // Save data for stone piles.
+    public List<EarthPileSaveData> EarthPiles { get; set; }
+
     public class MinerSaveData
     {
         public string MinerName { get; set; }
@@ -51,6 +54,12 @@ public class GameState
         public StoneType InputType { get; set; }
         public StoneType OutputType { get; set; }
         public int ID { get; set; }
+    }
+
+    public class EarthPileSaveData
+    {
+        public StoneType StoneType { get; set; }
+        public Vector2 Position { get; set; }
     }
 }
 
@@ -111,6 +120,13 @@ public class SaveSystem
                 InputType = c.InputType,
                 OutputType = c.OutputType,
                 ID = c.ID
+            }).ToList(),
+
+            // Save multiple earth piles.
+            EarthPiles = Program.earthPiles.Select(ep => new GameState.EarthPileSaveData
+            {
+                StoneType = ep.StoneType,
+                Position = ep.Position
             }).ToList()
         };
 
@@ -188,6 +204,18 @@ public class SaveSystem
                 var crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper, 50, 50, (crusherData.ID * 100)+200, crusherData.ID);
                 crusher.RestoreState(crusherData);
                 Program.crushers.Add(crusher);
+            }
+        }
+
+        // Restore multiple earth piles.
+        Program.earthPiles.Clear();
+        if (gameState.EarthPiles != null)
+        {
+            foreach (var earthPileData in gameState.EarthPiles)
+            {
+                var earthPile = new EarthPile(Program.caravan, 50, 50, earthPileData.StoneType);
+                earthPile.Position = earthPileData.Position;
+                Program.earthPiles.Add(earthPile);
             }
         }
 
