@@ -127,8 +127,8 @@ public class Program
     public static float minerProgress = 0;
     public static float minerThreshold = 10;
     public static StoneType? DraggedStoneType = null;  // Track which stone type is being dragged
-    //Dictionary<StoneType, int> stoneCounts = new Dictionary<StoneType, int>();
-  //public int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
+                                                       //Dictionary<StoneType, int> stoneCounts = new Dictionary<StoneType, int>();
+                                                       //public int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
     public static int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
 
 
@@ -155,7 +155,7 @@ public class Program
             Raylib.SetWindowPosition(0, topBarHeight);
         }
 
-        }
+    }
 
     public static void CheckAndRemoveDestroyedBlocks()
     {
@@ -189,8 +189,8 @@ public class Program
     public static void Main()
     {
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
- 
-        
+
+
         Raylib.InitWindow(refWidth, refHeight, "Yearn");
         Raylib.SetTargetFPS(60);
 
@@ -199,7 +199,7 @@ public class Program
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
         crushers.Add(new Crusher(caravan, StoneType.Earth, StoneType.Stone, 100, 50, 50, 200, 0));
-        
+
         player = new Player(playerStartPos, caravan);
 
         camera = new Camera2D
@@ -268,7 +268,7 @@ public class Program
             Raylib.SetWindowMinSize(60, 80);
 
             saveSystem.Update(dt);
-            
+
             // Create piles for stone types that don't have one yet
             for (int i = 0; i < stoneCounts.Length; i++)
             {
@@ -277,16 +277,16 @@ public class Program
                     earthPiles.Add(new EarthPile(caravan, 50, 50, (StoneType)i));
                 }
             }
-            
+
             // Remove piles for stone types that are empty
             earthPiles.RemoveAll(p => Program.stoneCounts[(int)p.StoneType] <= 0);
-            
+
             // Update each earth pile
             foreach (var pile in earthPiles)
             {
                 pile.Update(camera);
             }
-            
+
             foreach (var crusher in crushers)
             {
                 crusher.Update(dt);
@@ -321,11 +321,11 @@ public class Program
                 crushers.Add(new Crusher(
                        caravan,
                        (StoneType)crushers.Count,
-                       (StoneType)(crushers.Count+1),
+                       (StoneType)(crushers.Count + 1),
                        100,
                        50,
                        50,
-                       newCrusherID * 60,
+                       (newCrusherID * 70) +200,
                        newCrusherID
                    ));
             }
@@ -433,13 +433,13 @@ public class Program
             {
                 crusher.Draw();
             }
-            
+
             // Draw each earth pile
             foreach (var pile in earthPiles)
             {
                 pile.Draw(camera);
             }
-            
+
             player.Draw(dt);
             foreach (var m in miners)
             {

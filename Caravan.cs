@@ -34,19 +34,19 @@ public class Caravan
     public void Draw()
     {
         Raylib.DrawEllipse(
-            (int)(position.X + width / 2),  
-            (int)position.Y,                
-            (int)(width / 2),               
-            (int)height,                    
+            (int)(position.X + width / 2),
+            (int)position.Y,
+            (int)(width / 2),
+            (int)height,
             color
         );
-        int rectHeight = (int)(height * 3f); 
+        int rectHeight = (int)(height * 3f);
 
         Raylib.DrawRectangle(
-            (int)position.X,               
-            (int)(position.Y + height - 200), 
-            (int)width,                    
-            rectHeight,                    
+            (int)position.X,
+            (int)(position.Y + height - 200),
+            (int)width,
+            rectHeight,
             color
         );
     }
@@ -55,7 +55,7 @@ public class Caravan
     public bool CheckClick(Vector2 mousePosition)
     {
         float clickableLeft = position.X;
-        float clickableTop = position.Y -100; 
+        float clickableTop = position.Y - 100;
         float clickableWidth = width;
         float clickableHeight = Program.refHeight - position.Y + 500;
 

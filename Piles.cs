@@ -26,7 +26,7 @@ public class EarthPile
     public Vector2 GetEffectivePosition()
     {
         int index = (int)StoneType;
-        
+
         return caravan.Center - new Vector2(Width / 2, Height / 2) + new Vector2(0, index * 80);
     }
 
@@ -35,12 +35,12 @@ public class EarthPile
         Vector2 mouseScreenPos = Raylib.GetMousePosition();
         Vector2 worldMousePos = Raylib.GetScreenToWorld2D(mouseScreenPos, camera);
 
-        if (Raylib.IsMouseButtonPressed(MouseButton.Left) && 
+        if (Raylib.IsMouseButtonPressed(MouseButton.Left) &&
             Raylib.CheckCollisionPointRec(worldMousePos, new Rectangle(Position.X, Position.Y, Width, Height)))
         {
             isDragging = true;
             dragOffset = Position - worldMousePos;
-            Program.DraggedStoneType = StoneType; 
+            Program.DraggedStoneType = StoneType;
         }
 
         else
@@ -73,7 +73,7 @@ public class EarthPile
                 }
                 Position = GetEffectivePosition();
                 isDragging = false;
-                Program.DraggedStoneType = null; 
+                Program.DraggedStoneType = null;
             }
         }
     }

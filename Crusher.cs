@@ -128,15 +128,15 @@ public class Crusher
 
     public void Update(float dt)
     {
-        if (InputResource > 0)
+        if (InputResource > ConversionAmount)
         {
             conversionTimer += dt;
-            while (conversionTimer >= 1.0f && InputResource >= 2)  // Need at least 2 input resources
+            while (conversionTimer >= 1.0f && InputResource >= 2) 
             {
                 conversionTimer -= 1.0f;
-                int converted = Math.Min(InputResource - (InputResource % 2), (int)ConversionAmount * 2);  // Convert in pairs
+                int converted = Math.Min(InputResource - (InputResource % 2), (int)ConversionAmount * 2); 
                 InputResource -= converted;
-                Program.stoneCounts[(int)OutputType] += converted / 2;  // Output half as much
+                Program.stoneCounts[(int)OutputType] += converted / 2;
             }
         }
         else
