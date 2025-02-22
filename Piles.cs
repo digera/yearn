@@ -1,4 +1,4 @@
-﻿using Raylib_cs;
+using Raylib_cs;
 using System;
 using System.Numerics;
 
@@ -26,7 +26,8 @@ public class EarthPile
     public Vector2 GetEffectivePosition()
     {
         int index = (int)StoneType;
-        return caravan.Center - new Vector2(Width / 2, Height / 2) + new Vector2(0, index * 100);
+        
+        return caravan.Center - new Vector2(Width / 2, Height / 2) + new Vector2(0, index * 80);
     }
 
     public void Update(Camera2D camera)
@@ -34,16 +35,14 @@ public class EarthPile
         Vector2 mouseScreenPos = Raylib.GetMousePosition();
         Vector2 worldMousePos = Raylib.GetScreenToWorld2D(mouseScreenPos, camera);
 
-        if (Raylib.IsMouseButtonPressed(MouseButton.Left) && IsMouseOver(worldMousePos))
+        if (Raylib.IsMouseButtonPressed(MouseButton.Left) && 
+            Raylib.CheckCollisionPointRec(worldMousePos, new Rectangle(Position.X, Position.Y, Width, Height)))
         {
             isDragging = true;
             dragOffset = Position - worldMousePos;
+            Program.DraggedStoneType = StoneType; 
         }
 
-        if (isDragging)
-        {
-            Position = worldMousePos + dragOffset;
-        }
         else
         {
             Position = GetEffectivePosition();
@@ -60,25 +59,23 @@ public class EarthPile
 
                     if (Raylib.CheckCollisionPointRec(worldMousePos, crusherRect))
                     {
-                        int transferAmount = Math.Min((crusher.Hopper - crusher.InputResource), Program.stoneCounts[(int)StoneType]);
-                        if (transferAmount > 0)
+                        if (crusher.InputType == StoneType)
                         {
-                            Program.stoneCounts[(int)StoneType] -= transferAmount;
-                            crusher.ReceiveResource(transferAmount);
-                            Program.player.exp += transferAmount;
+                            int transferAmount = Math.Min((crusher.Hopper - crusher.InputResource), Program.stoneCounts[(int)StoneType]);
+                            if (transferAmount > 0)
+                            {
+                                Program.stoneCounts[(int)StoneType] -= transferAmount;
+                                crusher.ReceiveResource(transferAmount);
+                                Program.player.exp += transferAmount;
+                            }
                         }
                     }
                 }
                 Position = GetEffectivePosition();
                 isDragging = false;
+                Program.DraggedStoneType = null; 
             }
         }
-    }
-
-    private bool IsMouseOver(Vector2 worldPos)
-    {
-        return worldPos.X >= Position.X && worldPos.X <= Position.X + Width &&
-               worldPos.Y >= Position.Y && worldPos.Y <= Position.Y + Height;
     }
 
     public void Draw(Camera2D camera)

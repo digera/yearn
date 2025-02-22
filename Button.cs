@@ -1,4 +1,4 @@
-﻿using Raylib_cs;
+using Raylib_cs;
 using System.Numerics;
 //this is deprecated but maybe useful?
 public class Button
@@ -43,9 +43,6 @@ public class Button
     public bool IsClicked(Vector2 mousePos)
     {
         Vector2 pos = GetPosition();
-        return mousePos.X >= pos.X &&
-               mousePos.X <= pos.X + Width &&
-               mousePos.Y >= pos.Y &&
-               mousePos.Y <= pos.Y + Height;
+        return Raylib.CheckCollisionPointRec(mousePos, new Rectangle(pos.X, pos.Y, Width, Height));
     }
 }

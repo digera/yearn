@@ -1,9 +1,10 @@
-﻿using Raylib_cs;
+using Raylib_cs;
 using System;
 using System.Numerics;
 
-
-
+/// <summary>
+/// Crusher class, handles the conversion of one resource to another
+/// </summary>
 public class Crusher
 {
     private Caravan caravan;
@@ -69,7 +70,7 @@ public class Crusher
 
         // Display current resource counts and conversion rate
         string text = $"{InputResource}/{Hopper} {InputResourceName}\n" +
-                      $"{OutputResource} {OutputResourceName}\n" +
+                      $"{Program.stoneCounts[(int)OutputType]} {OutputResourceName}\n" +
                       $"{ConversionAmount}/s";
         Raylib.DrawText(text, (int)pos.X + 5, (int)pos.Y + 5, 10, Color.Black);
 
@@ -80,7 +81,7 @@ public class Crusher
         DrawUpgradeButton(pos, 1, ConversionUpgradeCost.ToString());
     }
 
-    // Utility method for drawing an upgrade button
+    // Utility method for drawing an upgrade button should be in button.cs I think
     private void DrawUpgradeButton(Vector2 pos, int index, string cost)
     {
         int x = (int)pos.X + index * (buttonSize + buttonMargin);
@@ -93,11 +94,7 @@ public class Crusher
     public bool CheckClick(Vector2 mousePos)
     {
         Vector2 pos = GetEffectivePosition();
-        return mousePos.X >= pos.X &&
-               mousePos.X <= pos.X + boxWidth &&
-               mousePos.Y >= pos.Y &&
-               mousePos.Y <= pos.Y + boxHeight;
-        //     Raylib.CheckCollisionPointRec(mousePos, new Rectangle(pos.X, pos.Y, boxWidth, boxHeight));
+        return Raylib.CheckCollisionPointRec(mousePos, new Rectangle(pos.X, pos.Y, boxWidth, boxHeight));
     }
 
     // Out parameter upgradeIndex tells which upgrade was selected (0 = Hopper, 1 = Conversion).
@@ -134,14 +131,12 @@ public class Crusher
         if (InputResource > 0)
         {
             conversionTimer += dt;
-            while (conversionTimer >= 1.0f && InputResource > 0)
+            while (conversionTimer >= 1.0f && InputResource >= 2)  // Need at least 2 input resources
             {
                 conversionTimer -= 1.0f;
-                int converted = Math.Min(InputResource, (int)ConversionAmount);
+                int converted = Math.Min(InputResource - (InputResource % 2), (int)ConversionAmount * 2);  // Convert in pairs
                 InputResource -= converted;
-                //Program.stoneCounts[(int)StoneType.Stone] += converted;
-                OutputResource += converted;
-
+                Program.stoneCounts[(int)OutputType] += converted / 2;  // Output half as much
             }
         }
         else
@@ -155,9 +150,9 @@ public class Crusher
 
     public void UpgradeHopper()
     {
-        if (OutputResource >= HopperUpgradeCost)
+        if (Program.stoneCounts[(int)OutputType] >= HopperUpgradeCost)
         {
-            OutputResource -= HopperUpgradeCost;
+            Program.stoneCounts[(int)OutputType] -= HopperUpgradeCost;
             Hopper += 20;
         }
     }
@@ -166,9 +161,9 @@ public class Crusher
 
     public void UpgradeConversion()
     {
-        if (OutputResource >= ConversionUpgradeCost)
+        if (Program.stoneCounts[(int)OutputType] >= ConversionUpgradeCost)
         {
-            OutputResource -= ConversionUpgradeCost;
+            Program.stoneCounts[(int)OutputType] -= ConversionUpgradeCost;
             // ConversionAmount = ConversionAmount + ConversionAmount;
             ConversionAmount += 1;
         }
@@ -178,9 +173,7 @@ public class Crusher
         Hopper = data.Hopper;
         ConversionAmount = data.ConversionAmount;
         InputResource = data.InputResource;
-        OutputResource = data.OutputResource;
-       // extraYOffset = data.ExtraYOffset;
+        // extraYOffset = data.ExtraYOffset;
     }
 
 }
-
