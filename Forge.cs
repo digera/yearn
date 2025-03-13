@@ -60,8 +60,8 @@ public class Forge
             var pickaxe = activePickaxes[i];
             pickaxe.Update(dt);
             
-            // Remove pickaxes that have been collected or expired
-            if (pickaxe.IsCollected || pickaxe.IsExpired)
+            // Remove pickaxes that have been collected
+            if (pickaxe.IsCollected)
             {
                 activePickaxes.RemoveAt(i);
             }
@@ -75,7 +75,7 @@ public class Forge
         {
             CreatePickaxe(stoneType);
             // Consume the resource
-            Program.stoneCounts[(int)stoneType]--;
+            Program.stoneCounts[(int)stoneType]-= 50;
             canCreatePickaxe = false;
             forgeTimer = 0;
         }
@@ -99,7 +99,7 @@ public class Forge
         // Base stats
         float speed = 0.75f;
         float size = 4f;
-        int miningPower = 2;
+        int miningPower = 10;
         
         // Improve stats based on stone type
         int stoneLevel = (int)stoneType;
@@ -235,12 +235,12 @@ public class Pickaxe
     public void Update(float dt)
     {
         // Update lifetime
-        lifetime -= dt;
-        if (lifetime <= 0)
-        {
-            IsExpired = true;
-            return;
-        }
+       // lifetime -= dt;
+     //   if (lifetime <= 0)
+     //   {
+     //       IsExpired = true;
+    //        return;
+  //      }
         
         // Make the pickaxe bounce
         bounceTimer += dt;

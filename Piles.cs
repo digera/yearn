@@ -42,11 +42,11 @@ public class EarthPile
             dragOffset = Position - worldMousePos;
             Program.DraggedStoneType = StoneType;
         }
-
-        if (isDragging)
-        {
-            Position = worldMousePos + dragOffset;
-        }
+      //do not add this, this isn't needed.
+      //  if (isDragging)
+       // {
+         //   Position = worldMousePos + dragOffset;
+       // }
         else
         {
             Position = GetEffectivePosition();
