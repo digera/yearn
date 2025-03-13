@@ -19,6 +19,7 @@ public class Crusher
     public StoneType OutputType { get; private set; }
     public string InputResourceName { get; private set; }
     public string OutputResourceName { get; private set; }
+    public Miner AssignedMiner { get; private set; }
 
     // Visuals
     public int boxWidth;
@@ -26,10 +27,15 @@ public class Crusher
     public int extraYOffset;
     private const int buttonSize = 20;
     private const int buttonMargin = 5;
+    private const int tierButtonSize = 25; // Slightly larger button for tier creation
 
     // upgrade multipliers
     private readonly float hopperUpgradeMultiplier = 1.05f;
     private readonly float conversionUpgradeMultiplier = 1.05f;
+
+    // Tier upgrade cost - cost to create the next tier crusher
+    private readonly int tierUpgradeCost = 50;
+    public bool CanCreateNextTier => (int)OutputType < Enum.GetValues(typeof(StoneType)).Length - 1;
 
     public int ID { get; set; }
 
@@ -79,6 +85,13 @@ public class Crusher
         // Button 1: Upgrade Conversion (increase conversion amount per tick)
         DrawUpgradeButton(pos, 0, HopperUpgradeCost.ToString());
         DrawUpgradeButton(pos, 1, ConversionUpgradeCost.ToString());
+
+        // Draw the create next tier button if this crusher can create a next tier
+        // AND if there isn't already a crusher for the next tier
+        if (CanCreateNextTier && !CrusherExistsForType((StoneType)((int)OutputType + 1)))
+        {
+            DrawNextTierButton(pos);
+        }
     }
 
     // Utility method for drawing an upgrade button should be in button.cs I think
@@ -88,6 +101,17 @@ public class Crusher
         int y = (int)pos.Y + boxHeight;
         Raylib.DrawRectangle(x, y, buttonSize, buttonSize, Color.Gray);
         Raylib.DrawText(cost, x + 2, y + 2, 8, Color.White);
+    }
+
+    // Draw the button for creating the next tier crusher
+    private void DrawNextTierButton(Vector2 pos)
+    {
+        // Position the button at the bottom, after the upgrade buttons
+        int x = (int)pos.X + 2 * (buttonSize + buttonMargin);
+        int y = (int)pos.Y + boxHeight;
+        Raylib.DrawRectangle(x, y, tierButtonSize, tierButtonSize, Color.Green);
+        Raylib.DrawText(tierUpgradeCost.ToString(), x + 2, y + 2, 8, Color.White);
+        Raylib.DrawText("+", x + 10, y + 8, 12, Color.White);
     }
 
     // TODO: move CheckClick and many other methods to a utility class -- each class has its own and they're all slightly different and use the Raylib.CheckCollisionPointRec method 
@@ -116,6 +140,19 @@ public class Crusher
         return false;
     }
 
+    // Check if the next tier button was clicked
+    public bool CheckNextTierClick(Vector2 mousePos)
+    {
+        if (!CanCreateNextTier)
+            return false;
+            
+        Vector2 pos = GetEffectivePosition();
+        // Match the position calculation with the DrawNextTierButton method
+        int x = (int)pos.X + 2 * (buttonSize + buttonMargin);
+        int y = (int)pos.Y + boxHeight;
+        return Raylib.CheckCollisionPointRec(mousePos, new Rectangle(x, y, tierButtonSize, tierButtonSize));
+    }
+
     public void ReceiveResource(int amount)
     {
         if (InputType == (StoneType)ID)
@@ -124,7 +161,6 @@ public class Crusher
             //Program.stoneCounts[(int)StoneType.Stone] = Math.Min(Program.stoneCounts[(int)StoneType.Stone] + amount, Hopper);
         }
     }
-
 
     public void Update(float dt)
     {
@@ -168,6 +204,51 @@ public class Crusher
             ConversionAmount += 1;
         }
     }
+
+    // Check if a crusher already exists for a specific stone type
+    private bool CrusherExistsForType(StoneType type)
+    {
+        foreach (var crusher in Program.crushers)
+        {
+            if (crusher.OutputType == type)
+                return true;
+        }
+        return false;
+    }
+
+    // Method to create the next tier crusher
+    public bool CreateNextTierCrusher()
+    {
+        if (!CanCreateNextTier || Program.stoneCounts[(int)OutputType] < tierUpgradeCost)
+            return false;
+            
+        // Check if a crusher for the next tier already exists
+        StoneType nextOutputType = (StoneType)((int)OutputType + 1);
+        if (CrusherExistsForType(nextOutputType))
+            return false;
+            
+        // Consume resources
+        Program.stoneCounts[(int)OutputType] -= tierUpgradeCost;
+        
+        // Calculate the next tier crusher's input and output types
+        StoneType nextInputType = OutputType;
+        
+        // Create the new crusher
+        int newCrusherID = Program.crushers.Count;
+        Program.crushers.Add(new Crusher(
+            caravan,
+            nextInputType,
+            nextOutputType,
+            100,
+            50,
+            50,
+            (newCrusherID * 70) + 200,
+            newCrusherID
+        ));
+        
+        return true;
+    }
+
     public void RestoreState(GameState.CrusherSaveData data)
     {
         Hopper = data.Hopper;
@@ -176,4 +257,11 @@ public class Crusher
         // extraYOffset = data.ExtraYOffset;
     }
 
+    public void AssignMiner(Miner miner)
+    {
+        AssignedMiner = miner;
+        miner.CurrentState = MinerState.Working;
+        miner.TargetCrushers.Clear();
+        miner.TargetCrushers.Add(this);
+    }
 }

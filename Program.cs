@@ -290,6 +290,18 @@ public class Program
             foreach (var crusher in crushers)
             {
                 crusher.Update(dt);
+                
+                // Handle crusher clicks to assign miners
+                Vector2 mouseWorld = GetMouseWorld();
+                if (Raylib.IsMouseButtonPressed(MouseButton.Left) && crusher.CheckClick(mouseWorld))
+                {
+                    // Find an available miner (not currently working)
+                    var availableMiner = miners.FirstOrDefault(m => m.CurrentState != MinerState.Working);
+                    if (availableMiner != null)
+                    {
+                        crusher.AssignMiner(availableMiner);
+                    }
+                }
             }
 
             if (minerProgress >= minerThreshold)
@@ -318,10 +330,11 @@ public class Program
             if (Raylib.IsKeyPressed(KeyboardKey.C))
             {
                 int newCrusherID = crushers.Count;
+                int numStoneTypes = Enum.GetValues(typeof(StoneType)).Length;
                 crushers.Add(new Crusher(
                        caravan,
-                       (StoneType)crushers.Count,
-                       (StoneType)(crushers.Count + 1),
+                       (StoneType)(crushers.Count % numStoneTypes),
+                       (StoneType)((crushers.Count + 1) % numStoneTypes),
                        100,
                        50,
                        50,
@@ -351,7 +364,7 @@ public class Program
                     miner.CheckClick(mouseWorld);
                 }
 
-                // Process crushers: either perform an upgrade or, if clicked, set a random miner to Working.
+                Crusher crusherToCreateNextTier = null;
                 foreach (var crusher in crushers)
                 {
                     if (crusher.CheckUpgradeClick(mouseWorld, out int upgradeIndex))
@@ -366,6 +379,12 @@ public class Program
                                 break;
                         }
                     }
+                    else if (crusher.CheckNextTierClick(mouseWorld))
+                    {
+                        // Store the crusher that needs to create a next tier
+                        // We'll handle this after the loop to avoid collection modification during enumeration
+                        crusherToCreateNextTier = crusher;
+                    }
                     else if (crusher.CheckClick(mouseWorld))
                     {
                         if (miners.Count > 0)
@@ -374,6 +393,12 @@ public class Program
                             miners[index].CurrentState = MinerState.Working;
                         }
                     }
+                }
+
+                // Create the next tier crusher if needed (outside the loop to avoid collection modification during enumeration)
+                if (crusherToCreateNextTier != null)
+                {
+                    crusherToCreateNextTier.CreateNextTierCrusher();
                 }
 
                 // Process caravan click: if the caravan was clicked, set the player to Crafting and target the caravan center;

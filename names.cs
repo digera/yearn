@@ -79,8 +79,22 @@ public enum StoneType
     {
     Earth,
     Stone,
-    Iron,
-    Gold,
+    Hardstone,
+    Rock,
+    Marble,
+    Quartz,
+    Limestone,
+    Granite,
+    Sandstone,
+    Quartzite,
+    Obsidian,
+    Diamondstone,
+    Amethyst,
+    Sapphire,
+    Ruby,
+    Emerald,
+    Citrine,
+    Onyx,
     Diamond
     }
 
