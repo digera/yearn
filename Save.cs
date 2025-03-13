@@ -28,6 +28,7 @@ public class GameState
         public int BasePower { get; set; }
         public float Speed { get; set; }
         public PickaxeStats PickaxeStats { get; set; }
+        public CanisterStats CanisterStats { get; set; }
 
         // New: Save EXP for each miner.
         public int Exp { get; set; }
@@ -96,6 +97,7 @@ public class SaveSystem
                 BasePower = m.basePwr,
                 Speed = m.Speed,
                 PickaxeStats = m.pickaxeStats,
+                CanisterStats = m.canisterStats,
                 Exp = m.exp,
                 MaxExp = m.expToNextLevel
             }).ToList(),
@@ -196,6 +198,7 @@ public class SaveSystem
                     miner.invMax = minerState.InvMax;
                     miner.Speed = minerState.Speed;
                     miner.pickaxeStats = minerState.PickaxeStats;
+                    miner.canisterStats = minerState.CanisterStats;
                     miner.exp = minerState.Exp;
                     miner.expToNextLevel = minerState.MaxExp;
                     Program.miners.Add(miner);

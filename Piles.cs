@@ -99,6 +99,24 @@ public class EarthPile
                     }
                 }
                 
+                // Check if dropped on canister station
+                if (!dropped)
+                {
+                    Vector2 stationPos = Program.canisterStation.GetEffectivePosition();
+                    Rectangle stationRect = new Rectangle(stationPos.X, stationPos.Y, Program.canisterStation.Width, Program.canisterStation.Height);
+                    
+                    if (Raylib.CheckCollisionPointRec(worldMousePos, stationRect))
+                    {
+                        dropped = true;
+                        
+                        // Check if we can create a canister
+                        if (Program.canisterStation.CanCreateCanister && Program.stoneCounts[(int)StoneType] > 0)
+                        {
+                            Program.canisterStation.CreateCanisterFromPile(StoneType);
+                        }
+                    }
+                }
+                
                 Position = GetEffectivePosition();
                 isDragging = false;
                 Program.DraggedStoneType = null;

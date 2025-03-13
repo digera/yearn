@@ -129,6 +129,7 @@ public class Program
     public static int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
     public static StoneType? DraggedStoneType = null;  // Track which stone type is being dragged
     public static Forge forge;  // Add forge instance
+    public static CanisterStation canisterStation; // Add canister station instance
 
     public void LockAspectRatio()
     {
@@ -201,6 +202,9 @@ public class Program
         
         // Initialize the forge
         forge = new Forge(caravan);
+        
+        // Initialize the canister station
+        canisterStation = new CanisterStation(caravan);
 
         camera = new Camera2D
         {
@@ -289,6 +293,9 @@ public class Program
             
             // Update the forge
             forge.Update(dt);
+            
+            // Update the canister station
+            canisterStation.Update(dt);
 
             foreach (var crusher in crushers)
             {
@@ -416,6 +423,10 @@ public class Program
                 {
                     // Handle forge click if needed
                 }
+                else if (canisterStation.CheckClick(mouseWorld))
+                {
+                    // Handle canister station click if needed
+                }
                 else
                 {
                     player.CurrentState = PlayerState.Walking;
@@ -468,6 +479,9 @@ public class Program
 
             // Draw the forge
             forge.Draw();
+            
+            // Draw the canister station
+            canisterStation.Draw();
 
             // Draw each earth pile
             foreach (var pile in earthPiles)

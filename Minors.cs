@@ -426,4 +426,19 @@ public class Miner
         // If no pile exists, use the caravan position as a fallback
         return new Vector2(Program.refWidth / 2, caravan.Y);
     }
+
+    // Check if a canister is better than the current one
+    public bool IsCanisterBetter(CanisterStats newCanisterStats)
+    {
+        // Simple comparison - if capacity is higher, it's better
+        // Could be more sophisticated based on game balance
+        return newCanisterStats.Capacity > canisterStats.Capacity;
+    }
+
+    // Update the miner's canister stats
+    public void UpgradeCanister(CanisterStats newCanisterStats)
+    {
+        canisterStats = newCanisterStats;
+        // Visual feedback could be added here
+    }
 }
