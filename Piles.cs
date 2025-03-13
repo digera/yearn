@@ -43,6 +43,10 @@ public class EarthPile
             Program.DraggedStoneType = StoneType;
         }
 
+        if (isDragging)
+        {
+            Position = worldMousePos + dragOffset;
+        }
         else
         {
             Position = GetEffectivePosition();
@@ -52,6 +56,9 @@ public class EarthPile
         {
             if (isDragging)
             {
+                bool dropped = false;
+                
+                // Check if dropped on a crusher
                 foreach (var crusher in Program.crushers)
                 {
                     Vector2 crusherPos = crusher.GetEffectivePosition();
@@ -59,6 +66,8 @@ public class EarthPile
 
                     if (Raylib.CheckCollisionPointRec(worldMousePos, crusherRect))
                     {
+                        dropped = true;
+                        
                         if (crusher.InputType == StoneType)
                         {
                             int transferAmount = Math.Min((crusher.Hopper - crusher.InputResource), Program.stoneCounts[(int)StoneType]);
@@ -71,6 +80,25 @@ public class EarthPile
                         }
                     }
                 }
+                
+                // Check if dropped on forge - handle it the same way as crushers
+                if (!dropped)
+                {
+                    Vector2 forgePos = Program.forge.GetEffectivePosition();
+                    Rectangle forgeRect = new Rectangle(forgePos.X, forgePos.Y, Program.forge.Width, Program.forge.Height);
+                    
+                    if (Raylib.CheckCollisionPointRec(worldMousePos, forgeRect))
+                    {
+                        dropped = true;
+                        
+                        // Check if we can create a pickaxe
+                        if (Program.forge.CanCreatePickaxe && Program.stoneCounts[(int)StoneType] > 0)
+                        {
+                            Program.forge.CreatePickaxeFromPile(StoneType);
+                        }
+                    }
+                }
+                
                 Position = GetEffectivePosition();
                 isDragging = false;
                 Program.DraggedStoneType = null;

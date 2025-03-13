@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-
 public class Miner
 {
     public string MinerName { get; set; }
@@ -60,8 +59,6 @@ public class Miner
             speed: 10,
             capacity: 10,
             color: Color.Orange);
-
-
 
         float angleRadians = (-90 + Raylib.GetRandomValue(-60, 60)) * MathF.PI / 180f;
         direction = new Vector2(MathF.Cos(angleRadians), MathF.Sin(angleRadians));
@@ -132,7 +129,6 @@ public class Miner
             return;
         }
 
-
         if (Raylib.CheckCollisionPointCircle(Program.GetMouseWorld(), Position, Radius) || Raylib.IsKeyDown(KeyboardKey.F1))
         {
             tip = tipSpan;
@@ -176,8 +172,10 @@ public class Miner
                 break;
         }
 
-
         UpdatePickaxes(dt, blocks);
+
+        // Check for nearby pickaxes to collect
+        CheckForPickaxes();
     }
 
     // deprecated...
@@ -370,5 +368,29 @@ public class Miner
                 Color.Black
             );
         }
+    }
+
+    // Check for pickaxes that can be collected
+    private void CheckForPickaxes()
+    {
+        // This method is intentionally left empty as the pickaxe collection logic
+        // is handled in the Pickaxe class to avoid duplicate code and maintain
+        // a cleaner architecture. The Pickaxe class checks for nearby miners and
+        // offers itself if it's better than the miner's current pickaxe.
+    }
+
+    // Check if a pickaxe is better than the current one
+    public bool IsPickaxeBetter(PickaxeStats newPickaxeStats)
+    {
+        // Simple comparison - if mining power is higher, it's better
+        // Could be more sophisticated based on game balance
+        return newPickaxeStats.MiningPower > pickaxeStats.MiningPower;
+    }
+
+    // Update the miner's pickaxe stats
+    public void UpgradePickaxe(PickaxeStats newPickaxeStats)
+    {
+        pickaxeStats = newPickaxeStats;
+        // Visual feedback could be added here
     }
 }

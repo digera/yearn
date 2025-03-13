@@ -126,12 +126,9 @@ public class Program
     public static List<EarthPile> earthPiles = new List<EarthPile>();
     public static float minerProgress = 0;
     public static float minerThreshold = 10;
-    public static StoneType? DraggedStoneType = null;  // Track which stone type is being dragged
-                                                       //Dictionary<StoneType, int> stoneCounts = new Dictionary<StoneType, int>();
-                                                       //public int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
     public static int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
-
-
+    public static StoneType? DraggedStoneType = null;  // Track which stone type is being dragged
+    public static Forge forge;  // Add forge instance
 
     public void LockAspectRatio()
     {
@@ -201,6 +198,9 @@ public class Program
         crushers.Add(new Crusher(caravan, StoneType.Earth, StoneType.Stone, 100, 50, 50, 200, 0));
 
         player = new Player(playerStartPos, caravan);
+        
+        // Initialize the forge
+        forge = new Forge(caravan);
 
         camera = new Camera2D
         {
@@ -286,6 +286,9 @@ public class Program
             {
                 pile.Update(camera);
             }
+            
+            // Update the forge
+            forge.Update(dt);
 
             foreach (var crusher in crushers)
             {
@@ -409,6 +412,10 @@ public class Program
                     player.IsMoving = false;
                     player.SetTarget(caravan.Center);
                 }
+                else if (forge.CheckClick(mouseWorld))
+                {
+                    // Handle forge click if needed
+                }
                 else
                 {
                     player.CurrentState = PlayerState.Walking;
@@ -458,6 +465,9 @@ public class Program
             {
                 crusher.Draw();
             }
+
+            // Draw the forge
+            forge.Draw();
 
             // Draw each earth pile
             foreach (var pile in earthPiles)
