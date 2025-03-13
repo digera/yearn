@@ -105,7 +105,7 @@ public class Forge
         int stoneLevel = (int)stoneType;
         speed = Math.Max(0.1f, speed - (stoneLevel * 0.05f)); // Lower is faster
         size = size + (stoneLevel * 0.5f);
-        miningPower = miningPower + (stoneLevel * 2);
+        miningPower = miningPower + (stoneLevel * 3);
         
         // Determine color based on stone type
         Color color = stoneType switch

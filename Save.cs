@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -144,81 +144,103 @@ public class SaveSystem
     public void LoadGame()
     {
         if (!File.Exists(SAVE_FILE))
+        {
+            Console.WriteLine("Save file not found.");
             return;
+        }
 
-        string jsonString = File.ReadAllText(SAVE_FILE);
-        var options = new JsonSerializerOptions
+        try
         {
-            IncludeFields = true
-        };
-        var gameState = JsonSerializer.Deserialize<GameState>(jsonString, options);
-        if (gameState == null)
-            return;
-
-        // Restore global stats.
-        Program.stoneCounts = gameState.StoneCounts ?? new int[Enum.GetValues(typeof(StoneType)).Length];
-        Block.currentDurabilityMultiplier = gameState.DurabilityMultiplier;
-        Block.currentYieldBonus = gameState.YieldBonus;
-
-        // Clear and restore miners.
-        Program.miners.Clear();
-        if (gameState.Miners != null)
-        {
-            foreach (var minerState in gameState.Miners)
+            string jsonString = File.ReadAllText(SAVE_FILE);
+            
+            // Check if the file is empty or contains only whitespace
+            if (string.IsNullOrWhiteSpace(jsonString))
             {
-                float xOffset = Program.refWidth * (Program.miners.Count % 2 == 0 ? 0.3f : 0.7f);
-                var miner = new Miner(
-                    new Vector2(xOffset, Program.refHeight * 0.9f),
-                    Program.caravan,
-                    minerState.BasePower,
-                    minerState.Speed,
-                    minerState.MinerName
-                );
-                miner.MinerName = minerState.MinerName;
-                miner.invCount = minerState.InvCount;
-                miner.invMax = minerState.InvMax;
-                miner.Speed = minerState.Speed;
-                miner.pickaxeStats = minerState.PickaxeStats;
-                miner.exp = minerState.Exp;
-                miner.expToNextLevel = minerState.MaxExp;
-                Program.miners.Add(miner);
+                Console.WriteLine("Save file is empty or contains only whitespace.");
+                return;
             }
-        }
-        Program.minerThreshold = 10 * (Program.miners.Count + 1);
-
-        if (gameState.Player != null && Program.player != null)
-        {
-            Program.player.basePwr = gameState.Player.BasePower;
-            Program.player.Speed = gameState.Player.Speed;
-            Program.player.SetPickaxeStats(gameState.Player.PickaxeStats);
-            Program.player.exp = gameState.Player.Exp;
-            Program.player.expToNextLevel = gameState.Player.MaxExp;
-        }
-
-        // Restore multiple crushers.
-        Program.crushers.Clear();
-        if (gameState.Crushers != null)
-        {
-            foreach (var crusherData in gameState.Crushers)
+            
+            var options = new JsonSerializerOptions
             {
-                var crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper, 50, 50, (crusherData.ID * 70) + 200, crusherData.ID);
-                crusher.RestoreState(crusherData);
-                Program.crushers.Add(crusher);
-            }
-        }
-
-        // Restore multiple earth piles.
-        Program.earthPiles.Clear();
-        if (gameState.EarthPiles != null)
-        {
-            foreach (var earthPileData in gameState.EarthPiles)
+                IncludeFields = true
+            };
+            
+            var gameState = JsonSerializer.Deserialize<GameState>(jsonString, options);
+            if (gameState == null)
             {
-                var earthPile = new EarthPile(Program.caravan, 50, 50, earthPileData.StoneType);
-                earthPile.Position = earthPileData.Position;
-                Program.earthPiles.Add(earthPile);
+                Console.WriteLine("Failed to deserialize game state.");
+                return;
             }
-        }
 
-        Console.WriteLine("Game loaded!");
+            // Restore global stats.
+            Program.stoneCounts = gameState.StoneCounts ?? new int[Enum.GetValues(typeof(StoneType)).Length];
+            Block.currentDurabilityMultiplier = gameState.DurabilityMultiplier;
+            Block.currentYieldBonus = gameState.YieldBonus;
+
+            // Clear and restore miners.
+            Program.miners.Clear();
+            if (gameState.Miners != null)
+            {
+                foreach (var minerState in gameState.Miners)
+                {
+                    float xOffset = Program.refWidth * (Program.miners.Count % 2 == 0 ? 0.3f : 0.7f);
+                    var miner = new Miner(
+                        new Vector2(xOffset, Program.refHeight * 0.9f),
+                        Program.caravan,
+                        minerState.BasePower,
+                        minerState.Speed,
+                        minerState.MinerName
+                    );
+                    miner.MinerName = minerState.MinerName;
+                    miner.invCount = minerState.InvCount;
+                    miner.invMax = minerState.InvMax;
+                    miner.Speed = minerState.Speed;
+                    miner.pickaxeStats = minerState.PickaxeStats;
+                    miner.exp = minerState.Exp;
+                    miner.expToNextLevel = minerState.MaxExp;
+                    Program.miners.Add(miner);
+                }
+            }
+            Program.minerThreshold = 10 * (Program.miners.Count + 1);
+
+            if (gameState.Player != null && Program.player != null)
+            {
+                Program.player.basePwr = gameState.Player.BasePower;
+                Program.player.Speed = gameState.Player.Speed;
+                Program.player.SetPickaxeStats(gameState.Player.PickaxeStats);
+                Program.player.exp = gameState.Player.Exp;
+                Program.player.expToNextLevel = gameState.Player.MaxExp;
+            }
+
+            // Restore multiple crushers.
+            Program.crushers.Clear();
+            if (gameState.Crushers != null)
+            {
+                foreach (var crusherData in gameState.Crushers)
+                {
+                    var crusher = new Crusher(Program.caravan, crusherData.InputType, crusherData.OutputType, crusherData.Hopper, 50, 50, (crusherData.ID * 70) + 200, crusherData.ID);
+                    crusher.RestoreState(crusherData);
+                    Program.crushers.Add(crusher);
+                }
+            }
+
+            // Restore multiple earth piles.
+            Program.earthPiles.Clear();
+            if (gameState.EarthPiles != null)
+            {
+                foreach (var earthPileData in gameState.EarthPiles)
+                {
+                    var earthPile = new EarthPile(Program.caravan, 50, 50, earthPileData.StoneType);
+                    earthPile.Position = earthPileData.Position;
+                    Program.earthPiles.Add(earthPile);
+                }
+            }
+
+            Console.WriteLine("Game loaded!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error loading game: " + ex.Message);
+        }
     }
 }

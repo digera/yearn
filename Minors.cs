@@ -76,10 +76,30 @@ public class Miner
                 basePwr++;
                 Speed++;
             }
-            Vector2 collectionPoint = new Vector2(Program.refWidth / 2, caravan.Y);
+            
+            // If we have no target crushers, return to normal state
+            if (TargetCrushers.Count == 0)
+            {
+                CurrentState = MinerState.MovingUp;
+                return;
+            }
+            
+            var targetCrusher = TargetCrushers[0];
+            StoneType resourceToCollect = targetCrusher.InputType;
+            
+            // Check if we have enough of the resource to collect
+            if (Program.stoneCounts[(int)resourceToCollect] <= 0)
+            {
+                // No resources available, change state
+                CurrentState = MinerState.MovingUp;
+                return;
+            }
 
             if (invCount < (invMax + canisterStats.Capacity))
             {
+                // Go to the pile location for the resource type we need
+                Vector2 collectionPoint = GetCollectionPointForResource(resourceToCollect);
+
                 Vector2 dir = collectionPoint - Position;
                 if (dir != Vector2.Zero) { dir = Vector2.Normalize(dir); }
                 Position += dir * Speed * dt;
@@ -90,10 +110,9 @@ public class Miner
                     if (workingFillTimer >= 0.25f)
                     {
                         workingFillTimer = 0;
-                        //if (StoneType.Earth > 0)
-                        if (Program.stoneCounts[(int)StoneType.Earth] > 0)
+                        if (Program.stoneCounts[(int)resourceToCollect] > 0)
                         {
-                            Program.stoneCounts[(int)StoneType.Earth]--;
+                            Program.stoneCounts[(int)resourceToCollect]--;
                             invCount++;
                             exp++;
                         }
@@ -392,5 +411,19 @@ public class Miner
     {
         pickaxeStats = newPickaxeStats;
         // Visual feedback could be added here
+    }
+
+    // Helper method to get the collection point for a specific resource type
+    private Vector2 GetCollectionPointForResource(StoneType resourceType)
+    {
+        // First check if there's a pile for this resource type
+        var pile = Program.earthPiles.FirstOrDefault(p => p.StoneType == resourceType);
+        if (pile != null)
+        {
+            return pile.Position;
+        }
+        
+        // If no pile exists, use the caravan position as a fallback
+        return new Vector2(Program.refWidth / 2, caravan.Y);
     }
 }
