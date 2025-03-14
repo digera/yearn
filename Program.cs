@@ -130,11 +130,55 @@ public class Program
     public static StoneType? DraggedStoneType = null;  // Track which stone type is being dragged
     public static Forge forge;  // Add forge instance
     public static ShovelStation shovelStation; // Add shovel station instance
-    // Render texture for letterboxing
-    private static RenderTexture2D target;
+    
+    // Flag to track if window size is being adjusted
+    private static bool isAdjustingWindowSize = false;
+    // Previous window size for comparison
+    private static int prevWindowWidth = 0;
+    private static int prevWindowHeight = 0;
 
-    // This method is no longer needed as we'll use letterboxing instead
-    // Keeping it commented for reference
+    // Method to maintain aspect ratio by adjusting window size
+    public static void MaintainAspectRatio()
+    {
+        // Don't process if we're already adjusting the window
+        if (isAdjustingWindowSize)
+            return;
+
+        int currentWidth = Raylib.GetScreenWidth();
+        int currentHeight = Raylib.GetScreenHeight();
+
+        // Only adjust if the window size has actually changed
+        if (currentWidth != prevWindowWidth || currentHeight != prevWindowHeight)
+        {
+            isAdjustingWindowSize = true;
+
+            float targetAspectRatio = (float)refHeight / refWidth; // 800/600 = 4/3
+            float currentAspectRatio = (float)currentHeight / currentWidth;
+
+            // Adjust window size to match the target aspect ratio
+            if (Math.Abs(currentAspectRatio - targetAspectRatio) > 0.01f) // Small threshold for floating point comparison
+            {
+                if (currentAspectRatio > targetAspectRatio)
+                {
+                    // Window is too tall, adjust height
+                    int newHeight = (int)(currentWidth * targetAspectRatio);
+                    Raylib.SetWindowSize(currentWidth, newHeight);
+                }
+                else
+                {
+                    // Window is too wide, adjust width
+                    int newWidth = (int)(currentHeight / targetAspectRatio);
+                    Raylib.SetWindowSize(newWidth, currentHeight);
+                }
+            }
+
+            prevWindowWidth = Raylib.GetScreenWidth();
+            prevWindowHeight = Raylib.GetScreenHeight();
+            isAdjustingWindowSize = false;
+        }
+    }
+
+    // This method is no longer needed as we'll use direct window size adjustment
     /*
     public void LockAspectRatio()
     {
@@ -160,20 +204,17 @@ public class Program
     }
     */
 
-    // New method to calculate virtual mouse position for letterboxing
+    // New method to calculate virtual mouse position
     public static Vector2 GetVirtualMousePosition()
     {
-        float scale = Math.Min(
-            (float)Raylib.GetScreenWidth() / refWidth,
-            (float)Raylib.GetScreenHeight() / refHeight
-        );
-
+        // Since we're maintaining aspect ratio with window size,
+        // we can just scale the mouse position directly
         Vector2 mouse = Raylib.GetMousePosition();
-        Vector2 virtualMouse = new Vector2();
-        virtualMouse.X = (mouse.X - (Raylib.GetScreenWidth() - (refWidth * scale)) * 0.5f) / scale;
-        virtualMouse.Y = (mouse.Y - (Raylib.GetScreenHeight() - (refHeight * scale)) * 0.5f) / scale;
-        virtualMouse = Vector2.Clamp(virtualMouse, Vector2.Zero, new Vector2(refWidth, refHeight));
-
+        Vector2 virtualMouse = new Vector2(
+            mouse.X * refWidth / Raylib.GetScreenWidth(),
+            mouse.Y * refHeight / Raylib.GetScreenHeight()
+        );
+        
         return virtualMouse;
     }
 
@@ -213,10 +254,10 @@ public class Program
         Raylib.InitWindow(refWidth, refHeight, "Yearn");
         Raylib.SetTargetFPS(60);
         Raylib.SetWindowMinSize(300, 400); // Set minimum window size
-
-        // Initialize render texture for letterboxing
-        target = Raylib.LoadRenderTexture(refWidth, refHeight);
-        Raylib.SetTextureFilter(target.Texture, TextureFilter.Bilinear);
+        
+        // Initialize previous window size
+        prevWindowWidth = refWidth;
+        prevWindowHeight = refHeight;
 
         stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
@@ -289,17 +330,15 @@ public class Program
 
         while (!Raylib.WindowShouldClose())
         {
+            // Maintain aspect ratio by adjusting window size
+            MaintainAspectRatio();
 
             float dt = Raylib.GetFrameTime();
             
-            // We'll handle scaling in our letterboxing code instead
-            // camera.Zoom = (float)Raylib.GetScreenHeight() / refHeight;
-            // camera.Offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
+            // Scale camera to match window size
+            camera.Zoom = (float)Raylib.GetScreenWidth() / refWidth;
+            camera.Offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
             
-            // No need to set max/min size as we're using letterboxing
-            // Raylib.SetWindowMaxSize(600, 800);
-            // Raylib.SetWindowMinSize(60, 80);
-
             saveSystem.Update(dt);
 
             // Create piles for stone types that don't have one yet
@@ -491,8 +530,8 @@ public class Program
             MoveCaravanUpIfNeeded(dt);
             UpdateCamera(dt);
 
-            // Begin drawing to render texture
-            Raylib.BeginTextureMode(target);
+            // Begin drawing directly to the screen (no render texture needed)
+            Raylib.BeginDrawing();
             Raylib.ClearBackground(Color.RayWhite);
             
             // Begin 2D mode with camera
@@ -531,7 +570,7 @@ public class Program
 
             Raylib.EndMode2D();
 
-            // Draw UI elements directly to the render texture
+            // Draw UI elements directly to the screen
             Raylib.DrawText($"Player Pos: {player.Position.X:F2}, {player.Position.Y:F2}", 10, 10, 20, Color.Black);
             Raylib.DrawText($"Player State: {player.CurrentState}", 10, 30, 20, Color.Black);
             Raylib.DrawText($"Blocks: {blocks.Count}", 10, 50, 20, Color.Black);
@@ -544,43 +583,18 @@ public class Program
 
             string scoreText = $"Earth: {stoneCounts[(int)StoneType.Earth]}";
             Vector2 scoreSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), scoreText, 30, 1);
-            float textCenterX = refWidth / 2f;
+            float screenCenterX = Raylib.GetScreenWidth() / 2f;
             Raylib.DrawText(
                 scoreText,
-                (int)(textCenterX - scoreSize.X / 2),
-                refHeight - 50,
+                (int)(screenCenterX - scoreSize.X / 2),
+                Raylib.GetScreenHeight() - 50,
                 30,
                 Color.DarkGray
             );
             
-            // End drawing to render texture
-            Raylib.EndTextureMode();
-            
-            // Begin drawing to screen
-            Raylib.BeginDrawing();
-            Raylib.ClearBackground(Color.Black);
-            
-            // Draw render texture to screen with letterboxing
-            float scale = Math.Min(
-                (float)Raylib.GetScreenWidth() / refWidth,
-                (float)Raylib.GetScreenHeight() / refHeight
-            );
-            
-            Rectangle sourceRec = new Rectangle(0, 0, target.Texture.Width, -target.Texture.Height);
-            Rectangle destRec = new Rectangle(
-                (Raylib.GetScreenWidth() - (refWidth * scale)) * 0.5f,
-                (Raylib.GetScreenHeight() - (refHeight * scale)) * 0.5f,
-                refWidth * scale,
-                refHeight * scale
-            );
-            
-            Raylib.DrawTexturePro(target.Texture, sourceRec, destRec, new Vector2(0, 0), 0.0f, Color.White);
-
             Raylib.EndDrawing();
         }
 
-        // Unload render texture before closing
-        Raylib.UnloadRenderTexture(target);
         Raylib.CloseWindow();
     }
 
