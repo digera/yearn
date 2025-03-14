@@ -67,51 +67,359 @@ public class Crusher
         return new Vector2(0, caravanTop) + offset + new Vector2(0, extraYOffset);
     }
 
+    // Fields for tracking mouse hover over buttons for tooltips
+    private bool isHoveringHopperButton = false;
+    private bool isHoveringConversionButton = false;
+    private bool isHoveringNextTierButton = false;
+
     public void Draw()
     {
         Vector2 pos = GetEffectivePosition();
+        Vector2 mousePos = Program.GetMouseWorld();
 
-        // Draw Crusher
-        Raylib.DrawRectangle((int)pos.X, (int)pos.Y, boxWidth, boxHeight, Color.Red);
+        // Get colors for input and output stone types
+        Color inputColor = StoneColorGenerator.GetColor(InputType);
+        Color outputColor = StoneColorGenerator.GetColor(OutputType);
+        
+        // Create a gradient effect from input to output color
+        Color crusherColor = new Color(
+            (byte)((inputColor.R + outputColor.R) / 2),
+            (byte)((inputColor.G + outputColor.G) / 2),
+            (byte)((inputColor.B + outputColor.B) / 2),
+            (byte)255
+        );
+        
+        // Darker border color
+        Color borderColor = new Color(
+            (byte)Math.Max(0, crusherColor.R - 40),
+            (byte)Math.Max(0, crusherColor.G - 40),
+            (byte)Math.Max(0, crusherColor.B - 40),
+            (byte)255
+        );
 
+        // Draw Crusher main body with rounded corners
+        Raylib.DrawRectangle((int)pos.X, (int)pos.Y, boxWidth, boxHeight, crusherColor);
+        Raylib.DrawRectangleLines((int)pos.X, (int)pos.Y, boxWidth, boxHeight, borderColor);
+        
+        // Draw crusher mechanism (gears, etc.)
+        int gearSize = 15;
+        int gearX = (int)pos.X + boxWidth / 2 - gearSize / 2;
+        int gearY = (int)pos.Y + boxHeight / 2 - gearSize / 2;
+        
+        // Draw main gear
+        Raylib.DrawCircle(gearX + gearSize/2, gearY + gearSize/2, gearSize/2, borderColor);
+        Raylib.DrawCircle(gearX + gearSize/2, gearY + gearSize/2, gearSize/3, crusherColor);
+        
+        // Draw gear teeth
+        for (int i = 0; i < 8; i++)
+        {
+            float angle = i * MathF.PI / 4;
+            float x1 = gearX + gearSize/2 + (gearSize/2 - 2) * MathF.Cos(angle);
+            float y1 = gearY + gearSize/2 + (gearSize/2 - 2) * MathF.Sin(angle);
+            float x2 = gearX + gearSize/2 + (gearSize/2 + 2) * MathF.Cos(angle);
+            float y2 = gearY + gearSize/2 + (gearSize/2 + 2) * MathF.Sin(angle);
+            Raylib.DrawLine((int)x1, (int)y1, (int)x2, (int)y2, borderColor);
+        }
+        
+        // Draw input hopper (left side)
+        Raylib.DrawTriangle(
+            new Vector2(pos.X + 5, pos.Y + 5),
+            new Vector2(pos.X + 20, pos.Y + 15),
+            new Vector2(pos.X + 5, pos.Y + 25),
+            inputColor
+        );
+        
+        // Draw output chute (right side)
+        Raylib.DrawTriangle(
+            new Vector2(pos.X + boxWidth - 5, pos.Y + 5),
+            new Vector2(pos.X + boxWidth - 20, pos.Y + 15),
+            new Vector2(pos.X + boxWidth - 5, pos.Y + 25),
+            outputColor
+        );
+
+        // Choose text color based on crusher color brightness for better readability
+        Color textColor = (crusherColor.R + crusherColor.G + crusherColor.B > 380) ? 
+            new Color((byte)20, (byte)20, (byte)20, (byte)255) : 
+            new Color((byte)230, (byte)230, (byte)230, (byte)255);
+            
+        // Create a small background for the text to ensure readability
+        Raylib.DrawRectangle(
+            (int)pos.X + 5,
+            (int)pos.Y + boxHeight - 30,
+            boxWidth - 10,
+            25,
+            new Color((byte)0, (byte)0, (byte)0, (byte)150)
+        );
+        
         // Display current resource counts and conversion rate
         string text = $"{InputResource}/{Hopper} {InputResourceName}\n" +
                       $"{Program.stoneCounts[(int)OutputType]} {OutputResourceName}\n" +
                       $"{ConversionAmount}/s";
-        Raylib.DrawText(text, (int)pos.X + 5, (int)pos.Y + 5, 10, Color.Black);
+        Raylib.DrawText(text, (int)pos.X + 8, (int)pos.Y + boxHeight - 28, 10, textColor);
 
-        // Draw the two upgrade buttons:
-        // Button 0: Upgrade Hopper (capacity)
-        // Button 1: Upgrade Conversion (increase conversion amount per tick)
-        DrawUpgradeButton(pos, 0, HopperUpgradeCost.ToString());
-        DrawUpgradeButton(pos, 1, ConversionUpgradeCost.ToString());
+        // Draw the two upgrade buttons with improved visuals and symbols
+        isHoveringHopperButton = DrawUpgradeButton(pos, 0, HopperUpgradeCost.ToString(), "⬆H", inputColor, mousePos);
+        isHoveringConversionButton = DrawUpgradeButton(pos, 1, ConversionUpgradeCost.ToString(), "⬆S", outputColor, mousePos);
 
         // Draw the create next tier button if this crusher can create a next tier
         // AND if there isn't already a crusher for the next tier
         if (CanCreateNextTier && !CrusherExistsForType((StoneType)((int)OutputType + 1)))
         {
-            DrawNextTierButton(pos);
+            isHoveringNextTierButton = DrawNextTierButton(pos, mousePos);
+        }
+        else
+        {
+            isHoveringNextTierButton = false;
+        }
+        
+        // Draw tooltips if hovering over buttons
+        DrawTooltips(pos, mousePos);
+    }
+    
+    // Draw tooltips for buttons when hovered
+    private void DrawTooltips(Vector2 pos, Vector2 mousePos)
+    {
+        if (isHoveringHopperButton || isHoveringConversionButton || isHoveringNextTierButton)
+        {
+            // Draw the tooltip directly on the right side of the caravan
+            // Get caravan dimensions
+            float caravanWidth = caravan.width;
+            float caravanY = caravan.Y;
+            
+            // Position the tooltip in the lower right area of the caravan
+            // Based on the yellow square in the screenshot
+            float tooltipX = caravanWidth * 0.7f;
+            float tooltipY = caravanY + caravan.height * 0.3f; // Move it down to the lower part
+            
+            // Make the tooltip larger
+            int tooltipWidth = 300;
+            int tooltipHeight = 150;
+            
+            // Draw tooltip background with semi-transparent dark background
+            Raylib.DrawRectangle(
+                (int)tooltipX, 
+                (int)tooltipY, 
+                tooltipWidth, 
+                tooltipHeight, 
+                new Color((byte)0, (byte)0, (byte)0, (byte)180)
+            );
+            
+            // Draw tooltip border
+            Raylib.DrawRectangleLines(
+                (int)tooltipX, 
+                (int)tooltipY, 
+                tooltipWidth, 
+                tooltipHeight, 
+                Color.White
+            );
+            
+            // Prepare tooltip text based on which button is being hovered
+            string tooltipTitle = "";
+            string tooltipDescription = "";
+            string tooltipCost = "";
+            string tooltipCurrent = "";
+            Color tooltipColor = Color.White;
+            
+            if (isHoveringHopperButton)
+            {
+                tooltipTitle = "UPGRADE HOPPER";
+                tooltipDescription = "Increases storage capacity for input resources";
+                tooltipCost = $"Cost: {HopperUpgradeCost} {OutputResourceName}";
+                tooltipCurrent = $"Current capacity: {Hopper}";
+                tooltipColor = StoneColorGenerator.GetColor(InputType);
+            }
+            else if (isHoveringConversionButton)
+            {
+                tooltipTitle = "UPGRADE CONVERSION SPEED";
+                tooltipDescription = "Increases the rate at which resources are converted";
+                tooltipCost = $"Cost: {ConversionUpgradeCost} {OutputResourceName}";
+                tooltipCurrent = $"Current rate: {ConversionAmount}/s";
+                tooltipColor = StoneColorGenerator.GetColor(OutputType);
+            }
+            else if (isHoveringNextTierButton)
+            {
+                StoneType nextTierType = (StoneType)((int)OutputType + 1);
+                tooltipTitle = "CREATE NEXT TIER CRUSHER";
+                tooltipDescription = $"Creates a new crusher that converts {OutputType} to {nextTierType}";
+                tooltipCost = $"Cost: {tierUpgradeCost} {OutputResourceName}";
+                tooltipCurrent = "";
+                tooltipColor = StoneColorGenerator.GetColor(nextTierType);
+            }
+            
+            // Draw colored header bar
+            Raylib.DrawRectangle(
+                (int)tooltipX, 
+                (int)tooltipY, 
+                tooltipWidth, 
+                30, 
+                tooltipColor
+            );
+            
+            // Choose text color based on header color brightness
+            Color headerTextColor = (tooltipColor.R + tooltipColor.G + tooltipColor.B > 380) ? 
+                new Color((byte)20, (byte)20, (byte)20, (byte)255) : 
+                new Color((byte)230, (byte)230, (byte)230, (byte)255);
+            
+            // Draw tooltip text with larger font sizes
+            Raylib.DrawText(tooltipTitle, (int)tooltipX + 10, (int)tooltipY + 8, 20, headerTextColor);
+            Raylib.DrawText(tooltipDescription, (int)tooltipX + 10, (int)tooltipY + 40, 16, Color.White);
+            Raylib.DrawText(tooltipCost, (int)tooltipX + 10, (int)tooltipY + 70, 18, Color.White);
+            
+            if (!string.IsNullOrEmpty(tooltipCurrent))
+            {
+                Raylib.DrawText(tooltipCurrent, (int)tooltipX + 10, (int)tooltipY + 100, 18, Color.White);
+            }
+            
+            // Draw a small indicator line from the button to the tooltip
+            if (isHoveringHopperButton || isHoveringConversionButton)
+            {
+                int buttonIndex = isHoveringHopperButton ? 0 : 1;
+                int buttonX = (int)pos.X + buttonIndex * (buttonSize + buttonMargin) + buttonSize/2;
+                int buttonY = (int)pos.Y + boxHeight + buttonSize/2;
+                
+                Raylib.DrawLine(
+                    buttonX,
+                    buttonY,
+                    (int)tooltipX,
+                    (int)tooltipY + tooltipHeight/2,
+                    Color.White
+                );
+            }
+            else if (isHoveringNextTierButton)
+            {
+                int buttonX = (int)pos.X + 2 * (buttonSize + buttonMargin) + tierButtonSize/2;
+                int buttonY = (int)pos.Y + boxHeight + tierButtonSize/2;
+                
+                Raylib.DrawLine(
+                    buttonX,
+                    buttonY,
+                    (int)tooltipX,
+                    (int)tooltipY + tooltipHeight/2,
+                    Color.White
+                );
+            }
         }
     }
 
-    // Utility method for drawing an upgrade button should be in button.cs I think
-    private void DrawUpgradeButton(Vector2 pos, int index, string cost)
+    // Utility method for drawing an upgrade button with improved visuals and symbols
+    private bool DrawUpgradeButton(Vector2 pos, int index, string cost, string symbol, Color baseColor, Vector2 mousePos)
     {
         int x = (int)pos.X + index * (buttonSize + buttonMargin);
         int y = (int)pos.Y + boxHeight;
-        Raylib.DrawRectangle(x, y, buttonSize, buttonSize, Color.Gray);
-        Raylib.DrawText(cost, x + 2, y + 2, 8, Color.White);
+        
+        // Create a lighter version of the base color for the button
+        Color buttonColor = new Color(
+            (byte)Math.Min(255, baseColor.R + 40),
+            (byte)Math.Min(255, baseColor.G + 40),
+            (byte)Math.Min(255, baseColor.B + 40),
+            (byte)255
+        );
+        
+        // Create a darker version for the border
+        Color borderColor = new Color(
+            (byte)Math.Max(0, baseColor.R - 40),
+            (byte)Math.Max(0, baseColor.G - 40),
+            (byte)Math.Max(0, baseColor.B - 40),
+            (byte)255
+        );
+        
+        // Check if mouse is hovering over this button
+        bool isHovering = mousePos.X >= x && mousePos.X <= x + buttonSize &&
+                          mousePos.Y >= y && mousePos.Y <= y + buttonSize;
+        
+        // If hovering, make the button brighter
+        if (isHovering)
+        {
+            buttonColor = new Color(
+                (byte)Math.Min(255, buttonColor.R + 30),
+                (byte)Math.Min(255, buttonColor.G + 30),
+                (byte)Math.Min(255, buttonColor.B + 30),
+                (byte)255
+            );
+        }
+        
+        // Draw button with border
+        Raylib.DrawRectangle(x, y, buttonSize, buttonSize, buttonColor);
+        Raylib.DrawRectangleLines(x, y, buttonSize, buttonSize, borderColor);
+        
+        // Add 3D effect with a highlight on top/left and shadow on bottom/right
+        Raylib.DrawLine(x + 1, y + 1, x + buttonSize - 2, y + 1, Color.White);
+        Raylib.DrawLine(x + 1, y + 1, x + 1, y + buttonSize - 2, Color.White);
+        Raylib.DrawLine(x + buttonSize - 1, y + 1, x + buttonSize - 1, y + buttonSize - 1, borderColor);
+        Raylib.DrawLine(x + 1, y + buttonSize - 1, x + buttonSize - 1, y + buttonSize - 1, borderColor);
+        
+        // Choose text color based on button color brightness
+        Color textColor = (buttonColor.R + buttonColor.G + buttonColor.B > 380) ? 
+            new Color((byte)20, (byte)20, (byte)20, (byte)255) : 
+            new Color((byte)230, (byte)230, (byte)230, (byte)255);
+            
+        // Draw the symbol in the center of the button with larger font
+        Raylib.DrawText(symbol, x + buttonSize/2 - 8, y + buttonSize/2 - 6, 12, textColor);
+        
+        return isHovering;
     }
 
-    // Draw the button for creating the next tier crusher
-    private void DrawNextTierButton(Vector2 pos)
+    // Draw the button for creating the next tier crusher with improved visuals and symbols
+    private bool DrawNextTierButton(Vector2 pos, Vector2 mousePos)
     {
         // Position the button at the bottom, after the upgrade buttons
         int x = (int)pos.X + 2 * (buttonSize + buttonMargin);
         int y = (int)pos.Y + boxHeight;
-        Raylib.DrawRectangle(x, y, tierButtonSize, tierButtonSize, Color.Green);
-        Raylib.DrawText(tierUpgradeCost.ToString(), x + 2, y + 2, 8, Color.White);
-        Raylib.DrawText("+", x + 10, y + 8, 12, Color.White);
+        
+        // Get the color for the next tier stone type
+        StoneType nextTierType = (StoneType)((int)OutputType + 1);
+        Color nextTierColor = StoneColorGenerator.GetColor(nextTierType);
+        
+        // Create a lighter version of the color for the button
+        Color buttonColor = new Color(
+            (byte)Math.Min(255, nextTierColor.R + 40),
+            (byte)Math.Min(255, nextTierColor.G + 40),
+            (byte)Math.Min(255, nextTierColor.B + 40),
+            (byte)255
+        );
+        
+        // Create a darker version for the border
+        Color borderColor = new Color(
+            (byte)Math.Max(0, nextTierColor.R - 40),
+            (byte)Math.Max(0, nextTierColor.G - 40),
+            (byte)Math.Max(0, nextTierColor.B - 40),
+            (byte)255
+        );
+        
+        // Check if mouse is hovering over this button
+        bool isHovering = mousePos.X >= x && mousePos.X <= x + tierButtonSize &&
+                          mousePos.Y >= y && mousePos.Y <= y + tierButtonSize;
+        
+        // If hovering, make the button brighter
+        if (isHovering)
+        {
+            buttonColor = new Color(
+                (byte)Math.Min(255, buttonColor.R + 30),
+                (byte)Math.Min(255, buttonColor.G + 30),
+                (byte)Math.Min(255, buttonColor.B + 30),
+                (byte)255
+            );
+        }
+        
+        // Draw button with border
+        Raylib.DrawRectangle(x, y, tierButtonSize, tierButtonSize, buttonColor);
+        Raylib.DrawRectangleLines(x, y, tierButtonSize, tierButtonSize, borderColor);
+        
+        // Add 3D effect with a highlight on top/left and shadow on bottom/right
+        Raylib.DrawLine(x + 1, y + 1, x + tierButtonSize - 2, y + 1, Color.White);
+        Raylib.DrawLine(x + 1, y + 1, x + 1, y + tierButtonSize - 2, Color.White);
+        Raylib.DrawLine(x + tierButtonSize - 1, y + 1, x + tierButtonSize - 1, y + tierButtonSize - 1, borderColor);
+        Raylib.DrawLine(x + 1, y + tierButtonSize - 1, x + tierButtonSize - 1, y + tierButtonSize - 1, borderColor);
+        
+        // Choose text color based on button color brightness
+        Color textColor = (buttonColor.R + buttonColor.G + buttonColor.B > 380) ? 
+            new Color((byte)20, (byte)20, (byte)20, (byte)255) : 
+            new Color((byte)230, (byte)230, (byte)230, (byte)255);
+            
+        // Draw a clear "+" symbol in the center of the button
+        Raylib.DrawText("+", x + tierButtonSize/2 - 6, y + tierButtonSize/2 - 8, 16, textColor);
+        
+        return isHovering;
     }
 
     // TODO: move CheckClick and many other methods to a utility class -- each class has its own and they're all slightly different and use the Raylib.CheckCollisionPointRec method 
@@ -229,8 +537,8 @@ public class Crusher
             return false;
             
         // Check if a crusher for the next tier already exists
-        StoneType nextOutputType = (StoneType)((int)OutputType + 1);
-        if (CrusherExistsForType(nextOutputType))
+        StoneType nextTierType = (StoneType)((int)OutputType + 1);
+        if (CrusherExistsForType(nextTierType))
             return false;
             
         // Consume resources
@@ -244,7 +552,7 @@ public class Crusher
         Program.crushers.Add(new Crusher(
             caravan,
             nextInputType,
-            nextOutputType,
+            nextTierType,
             100,
             50,
             50,
