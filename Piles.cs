@@ -132,38 +132,38 @@ public class EarthPile
             Color stoneColor = StoneColorGenerator.GetColor(StoneType);
             
             // Calculate pile size based on resource count (with a reasonable cap)
+            // Only expand on X axis, keep Y fixed
             int resourceCount = Program.stoneCounts[(int)StoneType];
-            float sizeMultiplier = Math.Min(1.0f + (resourceCount / 200.0f), 2.0f);
+            float sizeMultiplier = Math.Min(1.0f + (resourceCount / 200.0f), 2.5f);
             int effectiveWidth = (int)(Width * sizeMultiplier);
-            int effectiveHeight = (int)(Height * sizeMultiplier);
+            int effectiveHeight = Height; // Keep Y size fixed
             
             // Center the pile regardless of size
             int xOffset = (Width - effectiveWidth) / 2;
-            int yOffset = (Height - effectiveHeight) / 2;
+            int yOffset = 0; // No vertical offset needed since height is fixed
             
-            // Draw the main pile with the stone's color
-            Raylib.DrawRectangle(
-                (int)Position.X + xOffset, 
-                (int)Position.Y + yOffset, 
-                effectiveWidth, 
-                effectiveHeight, 
-                stoneColor
-            );
+            // Draw the main pile with the stone's color - using multiple circles for oval effect
+            int numCircles = 5; // Number of circles to create oval effect
+            int circleRadius = effectiveHeight / 2;
+            int circleSpacing = (effectiveWidth - circleRadius * 2) / Math.Max(1, numCircles - 1);
             
-            // Add a darker border for definition
-            Color borderColor = new Color(
-                (byte)Math.Max(0, stoneColor.R - 40),
-                (byte)Math.Max(0, stoneColor.G - 40),
-                (byte)Math.Max(0, stoneColor.B - 40),
-                (byte)255
-            );
-            Raylib.DrawRectangleLines(
-                (int)Position.X + xOffset, 
-                (int)Position.Y + yOffset, 
-                effectiveWidth, 
-                effectiveHeight, 
-                borderColor
-            );
+            for (int i = 0; i < numCircles; i++)
+            {
+                int circleX = (int)Position.X + xOffset + circleRadius + (i * circleSpacing);
+                int circleY = (int)Position.Y + (effectiveHeight / 2);
+                
+                // Draw filled circle
+                Raylib.DrawCircle(circleX, circleY, circleRadius, stoneColor);
+                
+                // Draw outline
+                Color borderColor = new Color(
+                    (byte)Math.Max(0, stoneColor.R - 40),
+                    (byte)Math.Max(0, stoneColor.G - 40),
+                    (byte)Math.Max(0, stoneColor.B - 40),
+                    (byte)255
+                );
+                Raylib.DrawCircleLines(circleX, circleY, circleRadius, borderColor);
+            }
             
             // Add texture to make it look more like a pile of stones
             // Draw small stone shapes within the pile
@@ -180,9 +180,11 @@ public class EarthPile
                     (byte)255
                 );
                 
-                // Random position within the pile
-                int stoneX = (int)Position.X + xOffset + random.Next(10, effectiveWidth - 10);
-                int stoneY = (int)Position.Y + yOffset + random.Next(10, effectiveHeight - 10);
+                // Random position within the oval area
+                float angle = random.Next(0, 360) * MathF.PI / 180;
+                float radiusVariation = random.Next(70, 95) / 100f; // 70-95% of max radius
+                int stoneX = (int)(Position.X + xOffset + (effectiveWidth / 2) + (effectiveWidth / 2) * radiusVariation * MathF.Cos(angle));
+                int stoneY = (int)(Position.Y + (effectiveHeight / 2) + (effectiveHeight / 2) * radiusVariation * MathF.Sin(angle));
                 int stoneSize = random.Next(5, 12);
                 
                 // Draw the individual stone
@@ -232,17 +234,32 @@ public class EarthPile
                 // Use the virtual mouse position for drawing the dragged item
                 Vector2 worldMousePos = Program.GetMouseWorld();
                 
-                // Draw a more visually appealing dragged item
-                Raylib.DrawCircleV(worldMousePos, 20, stoneColor);
+                // Draw a more visually appealing dragged item - oval shape
+                float dragWidth = 30;
+                float dragHeight = 20;
                 
-                // Add some small stones in the dragged circle to show it's a collection
+                // Draw main oval using multiple circles
+                int dragCircles = 3;
+                float dragCircleRadius = dragHeight / 2;
+                float dragCircleSpacing = (dragWidth - dragCircleRadius * 2) / Math.Max(1, dragCircles - 1);
+                
+                for (int i = 0; i < dragCircles; i++)
+                {
+                    float circleX = worldMousePos.X - (dragWidth / 2) + dragCircleRadius + (i * dragCircleSpacing);
+                    float circleY = worldMousePos.Y;
+                    
+                    Raylib.DrawCircle((int)circleX, (int)circleY, dragCircleRadius, stoneColor);
+                }
+                
+                // Add some small stones in the dragged oval to show it's a collection
                 for (int i = 0; i < 5; i++)
                 {
                     float angle = i * (2 * MathF.PI / 5);
-                    float radius = 10;
+                    float radiusX = dragWidth / 2 - 5;
+                    float radiusY = dragHeight / 2 - 5;
                     Vector2 stonePos = new Vector2(
-                        worldMousePos.X + radius * MathF.Cos(angle),
-                        worldMousePos.Y + radius * MathF.Sin(angle)
+                        worldMousePos.X + radiusX * MathF.Cos(angle),
+                        worldMousePos.Y + radiusY * MathF.Sin(angle)
                     );
                     
                     Color stoneVariation = new Color(
@@ -255,8 +272,22 @@ public class EarthPile
                     Raylib.DrawCircleV(stonePos, 5, stoneVariation);
                 }
                 
-                // Add a highlight effect to the dragged item
-                Raylib.DrawCircleLines((int)worldMousePos.X, (int)worldMousePos.Y, 22, borderColor);
+                // Create a darker border color for the outline
+                Color dragBorderColor = new Color(
+                    (byte)Math.Max(0, stoneColor.R - 40),
+                    (byte)Math.Max(0, stoneColor.G - 40),
+                    (byte)Math.Max(0, stoneColor.B - 40),
+                    (byte)255
+                );
+                
+                // Add a highlight effect to the dragged item - using circle lines instead of ellipse
+                for (int i = 0; i < dragCircles; i++)
+                {
+                    float circleX = worldMousePos.X - (dragWidth / 2) + dragCircleRadius + (i * dragCircleSpacing);
+                    float circleY = worldMousePos.Y;
+                    
+                    Raylib.DrawCircleLines((int)circleX, (int)circleY, dragCircleRadius + 1, dragBorderColor);
+                }
             }
         }
     }

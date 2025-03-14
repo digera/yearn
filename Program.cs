@@ -128,7 +128,7 @@ public class Program
     public static float minerThreshold = 10;
     public static int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
     public static StoneType? DraggedStoneType = null;  // Track which stone type is being dragged
-    public static Forge forge;  // Add forge instance
+    public static Forge? forge;  // Add forge instance
     public static ShovelStation? shovelStation; // Add shovel station instance
     
     // Flag to track if window size is being adjusted
@@ -360,10 +360,12 @@ public class Program
             }
             
             // Update the forge
-            forge.Update(dt);
+            if (forge != null)
+                forge.Update(dt);
             
             // Update the shovel station
-            shovelStation.Update(dt);
+            if (shovelStation != null)
+                shovelStation.Update(dt);
 
             foreach (var crusher in crushers)
             {
@@ -489,11 +491,11 @@ public class Program
                     player.IsMoving = false;
                     player.SetTarget(caravan.Center);
                 }
-                else if (forge.CheckClick(mouseWorld))
+                else if (forge != null && forge.CheckClick(mouseWorld))
                 {
                     // Handle forge click if needed
                 }
-                else if (shovelStation.CheckClick(mouseWorld))
+                else if (shovelStation != null && shovelStation.CheckClick(mouseWorld))
                 {
                     // Handle shovel station click if needed
                 }
@@ -551,10 +553,12 @@ public class Program
             }
 
             // Draw the forge
-            forge.Draw();
+            if (forge != null)
+                forge.Draw();
             
             // Draw the shovel station
-            shovelStation.Draw();
+            if (shovelStation != null)
+                shovelStation.Draw();
 
             // Draw each earth pile
             foreach (var pile in earthPiles)

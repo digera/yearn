@@ -19,7 +19,7 @@ public class Crusher
     public StoneType OutputType { get; private set; }
     public string InputResourceName { get; private set; }
     public string OutputResourceName { get; private set; }
-    public Miner AssignedMiner { get; private set; }
+    public Miner? AssignedMiner { get; set; }
 
     // Visuals
     public int boxWidth;
