@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,13 +20,13 @@ public struct PickaxeStats
         Color = color ?? Color.Black;
     }
 }
-public struct CanisterStats
+public struct ShovelStats
 {
     public float Speed { get; set; }
     public float Capacity { get; set; }
     public Color Color { get; set; }
 
-    public CanisterStats(float speed, float capacity, Color? color = null)
+    public ShovelStats(float speed, float capacity, Color? color = null)
     {
         Speed = speed;
         Capacity = capacity;

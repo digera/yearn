@@ -30,8 +30,8 @@ public class Crusher
     private const int tierButtonSize = 25; // Slightly larger button for tier creation
 
     // upgrade multipliers
-    private readonly float hopperUpgradeMultiplier = 1.05f;
-    private readonly float conversionUpgradeMultiplier = 1.05f;
+    private readonly float hopperUpgradeMultiplier = 1.25f;
+    private readonly float conversionUpgradeMultiplier = 1.2f;
 
     // Tier upgrade cost - cost to create the next tier crusher
     private readonly int tierUpgradeCost = 50;
@@ -182,26 +182,32 @@ public class Crusher
     }
 
     //TODO: learn math
-    public int HopperUpgradeCost => (int)(10 * Math.Pow(hopperUpgradeMultiplier, Hopper / 100.0));
+    public int HopperUpgradeCost => (int)(10 * Math.Pow(hopperUpgradeMultiplier, Hopper / 200.0));
 
     public void UpgradeHopper()
     {
         if (Program.stoneCounts[(int)OutputType] >= HopperUpgradeCost)
         {
             Program.stoneCounts[(int)OutputType] -= HopperUpgradeCost;
-            Hopper += 20;
+            // Increase hopper capacity by more as the game progresses
+            int increase = 20 + (Hopper / 100);  // Base increase of 20, plus 1 for every 100 current capacity
+            Hopper += increase;
         }
     }
     // "(int)(20" is the starting cost
-    public int ConversionUpgradeCost => (int)(20 * Math.Pow(conversionUpgradeMultiplier, ConversionAmount - 1));
+    public int ConversionUpgradeCost => (int)(20 * Math.Pow(conversionUpgradeMultiplier, ConversionAmount / 1.5));
 
     public void UpgradeConversion()
     {
         if (Program.stoneCounts[(int)OutputType] >= ConversionUpgradeCost)
         {
             Program.stoneCounts[(int)OutputType] -= ConversionUpgradeCost;
-            // ConversionAmount = ConversionAmount + ConversionAmount;
-            ConversionAmount += 1;
+            // Increase conversion amount by more as it gets higher
+            float increase = 1.0f;
+            if (ConversionAmount >= 10) increase = 2.0f;
+            if (ConversionAmount >= 20) increase = 3.0f;
+            if (ConversionAmount >= 50) increase = 5.0f;
+            ConversionAmount += increase;
         }
     }
 

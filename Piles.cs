@@ -99,20 +99,20 @@ public class EarthPile
                     }
                 }
                 
-                // Check if dropped on canister station
+                // Check if dropped on shovel station
                 if (!dropped)
                 {
-                    Vector2 stationPos = Program.canisterStation.GetEffectivePosition();
-                    Rectangle stationRect = new Rectangle(stationPos.X, stationPos.Y, Program.canisterStation.Width, Program.canisterStation.Height);
+                    Vector2 stationPos = Program.shovelStation.GetEffectivePosition();
+                    Rectangle stationRect = new Rectangle(stationPos.X, stationPos.Y, Program.shovelStation.Width, Program.shovelStation.Height);
                     
                     if (Raylib.CheckCollisionPointRec(worldMousePos, stationRect))
                     {
                         dropped = true;
                         
-                        // Check if we can create a canister
-                        if (Program.canisterStation.CanCreateCanister && Program.stoneCounts[(int)StoneType] > 0)
+                        // Check if we can create a shovel
+                        if (Program.shovelStation.CanCreateShovel && Program.stoneCounts[(int)StoneType] > 0)
                         {
-                            Program.canisterStation.CreateCanisterFromPile(StoneType);
+                            Program.shovelStation.CreateShovelFromPile(StoneType);
                         }
                     }
                 }

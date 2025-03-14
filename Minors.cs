@@ -28,7 +28,7 @@ public class Miner
     public MinerState CurrentState { get; set; } = MinerState.Idle;
 
     public PickaxeStats pickaxeStats;
-    public CanisterStats canisterStats;
+    public ShovelStats shovelStats;
     private List<(Vector2 Position, Block Target)> activePickaxes = new List<(Vector2, Block)>();
     private float pickaxeTimer;
 
@@ -55,7 +55,7 @@ public class Miner
             miningPower: 1,
             color: Color.Purple
         );
-        canisterStats = new CanisterStats(
+        shovelStats = new ShovelStats(
             speed: 10,
             capacity: 10,
             color: Color.Orange);
@@ -95,7 +95,7 @@ public class Miner
                 return;
             }
 
-            if (invCount < (invMax + canisterStats.Capacity))
+            if (invCount < (invMax + shovelStats.Capacity))
             {
                 // Go to the pile location for the resource type we need
                 Vector2 collectionPoint = GetCollectionPointForResource(resourceToCollect);
@@ -158,7 +158,7 @@ public class Miner
         }
 
         attn += dt;
-        if (invCount >= (invMax + canisterStats.Capacity))
+        if (invCount >= (invMax + shovelStats.Capacity))
         {
             CurrentState = MinerState.Returning;
         }
@@ -377,7 +377,7 @@ public class Miner
         if (tip > 0)
         {
             Raylib.DrawCircleLines((int)Position.X, (int)Position.Y, MINING_RANGE, Color.Yellow);
-            string st = $"{MinerName} {CurrentState} ({invCount}/{invMax}+{canisterStats.Capacity})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
+            string st = $"{MinerName} {CurrentState} ({invCount}/{invMax}+{shovelStats.Capacity})\nPwr:{basePwr}+{pickaxeStats.MiningPower}\nMov:{Speed}\nSpd:{pickaxeStats.Speed}";
             Vector2 ts = Raylib.MeasureTextEx(Raylib.GetFontDefault(), st, 20, 1);
             Raylib.DrawText(
                 st,
@@ -413,6 +413,21 @@ public class Miner
         // Visual feedback could be added here
     }
 
+    // Check if a shovel is better than the current one
+    public bool IsShovelBetter(ShovelStats newShovelStats)
+    {
+        // Simple comparison - if capacity is higher, it's better
+        // Could be more sophisticated based on game balance
+        return newShovelStats.Capacity > shovelStats.Capacity;
+    }
+
+    // Update the miner's shovel stats
+    public void UpgradeShovel(ShovelStats newShovelStats)
+    {
+        shovelStats = newShovelStats;
+        // Visual feedback could be added here
+    }
+
     // Helper method to get the collection point for a specific resource type
     private Vector2 GetCollectionPointForResource(StoneType resourceType)
     {
@@ -425,20 +440,5 @@ public class Miner
         
         // If no pile exists, use the caravan position as a fallback
         return new Vector2(Program.refWidth / 2, caravan.Y);
-    }
-
-    // Check if a canister is better than the current one
-    public bool IsCanisterBetter(CanisterStats newCanisterStats)
-    {
-        // Simple comparison - if capacity is higher, it's better
-        // Could be more sophisticated based on game balance
-        return newCanisterStats.Capacity > canisterStats.Capacity;
-    }
-
-    // Update the miner's canister stats
-    public void UpgradeCanister(CanisterStats newCanisterStats)
-    {
-        canisterStats = newCanisterStats;
-        // Visual feedback could be added here
     }
 }
