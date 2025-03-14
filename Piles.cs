@@ -32,8 +32,8 @@ public class EarthPile
 
     public void Update(Camera2D camera)
     {
-        Vector2 mouseScreenPos = Raylib.GetMousePosition();
-        Vector2 worldMousePos = Raylib.GetScreenToWorld2D(mouseScreenPos, camera);
+        // Use the virtual mouse position instead of the raw mouse position
+        Vector2 worldMousePos = Program.GetMouseWorld();
 
         if (Raylib.IsMouseButtonPressed(MouseButton.Left) &&
             Raylib.CheckCollisionPointRec(worldMousePos, new Rectangle(Position.X, Position.Y, Width, Height)))
@@ -133,8 +133,8 @@ public class EarthPile
 
             if (isDragging)
             {
-                Vector2 mouseScreenPos = Raylib.GetMousePosition();
-                Vector2 worldMousePos = Raylib.GetScreenToWorld2D(mouseScreenPos, camera);
+                // Use the virtual mouse position for drawing the dragged item
+                Vector2 worldMousePos = Program.GetMouseWorld();
                 Raylib.DrawCircleV(worldMousePos, 20, Color.Brown);
             }
         }

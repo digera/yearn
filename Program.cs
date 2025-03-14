@@ -130,7 +130,12 @@ public class Program
     public static StoneType? DraggedStoneType = null;  // Track which stone type is being dragged
     public static Forge forge;  // Add forge instance
     public static ShovelStation shovelStation; // Add shovel station instance
+    // Render texture for letterboxing
+    private static RenderTexture2D target;
 
+    // This method is no longer needed as we'll use letterboxing instead
+    // Keeping it commented for reference
+    /*
     public void LockAspectRatio()
     {
         float targetAspectRatio = (float)3 / 4;
@@ -152,7 +157,24 @@ public class Program
             Raylib.SetWindowSize(currentWidth, newHeight);
             Raylib.SetWindowPosition(0, topBarHeight);
         }
+    }
+    */
 
+    // New method to calculate virtual mouse position for letterboxing
+    public static Vector2 GetVirtualMousePosition()
+    {
+        float scale = Math.Min(
+            (float)Raylib.GetScreenWidth() / refWidth,
+            (float)Raylib.GetScreenHeight() / refHeight
+        );
+
+        Vector2 mouse = Raylib.GetMousePosition();
+        Vector2 virtualMouse = new Vector2();
+        virtualMouse.X = (mouse.X - (Raylib.GetScreenWidth() - (refWidth * scale)) * 0.5f) / scale;
+        virtualMouse.Y = (mouse.Y - (Raylib.GetScreenHeight() - (refHeight * scale)) * 0.5f) / scale;
+        virtualMouse = Vector2.Clamp(virtualMouse, Vector2.Zero, new Vector2(refWidth, refHeight));
+
+        return virtualMouse;
     }
 
     public static void CheckAndRemoveDestroyedBlocks()
@@ -186,12 +208,15 @@ public class Program
 
     public static void Main()
     {
-        Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
-
+        Raylib.SetConfigFlags(ConfigFlags.ResizableWindow | ConfigFlags.VSyncHint);
 
         Raylib.InitWindow(refWidth, refHeight, "Yearn");
         Raylib.SetTargetFPS(60);
+        Raylib.SetWindowMinSize(300, 400); // Set minimum window size
 
+        // Initialize render texture for letterboxing
+        target = Raylib.LoadRenderTexture(refWidth, refHeight);
+        Raylib.SetTextureFilter(target.Texture, TextureFilter.Bilinear);
 
         stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
@@ -266,10 +291,14 @@ public class Program
         {
 
             float dt = Raylib.GetFrameTime();
-            camera.Zoom = (float)Raylib.GetScreenHeight() / refHeight;
-            camera.Offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
-            Raylib.SetWindowMaxSize(600, 800);
-            Raylib.SetWindowMinSize(60, 80);
+            
+            // We'll handle scaling in our letterboxing code instead
+            // camera.Zoom = (float)Raylib.GetScreenHeight() / refHeight;
+            // camera.Offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
+            
+            // No need to set max/min size as we're using letterboxing
+            // Raylib.SetWindowMaxSize(600, 800);
+            // Raylib.SetWindowMinSize(60, 80);
 
             saveSystem.Update(dt);
 
@@ -355,6 +384,7 @@ public class Program
 
             if (Raylib.IsMouseButtonDown(MouseButton.Left))
             {
+                // Use virtual mouse position instead
                 Vector2 mouseWorld = GetMousePositionRef();
                 player.SetTarget(mouseWorld);
             }
@@ -362,6 +392,7 @@ public class Program
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
+                // Use virtual mouse position instead
                 Vector2 mouseWorld = GetMousePositionRef();
 
                 // Process miner clicks (each miner is processed twice in separate passes)
@@ -460,8 +491,11 @@ public class Program
             MoveCaravanUpIfNeeded(dt);
             UpdateCamera(dt);
 
-            Raylib.BeginDrawing();
+            // Begin drawing to render texture
+            Raylib.BeginTextureMode(target);
             Raylib.ClearBackground(Color.RayWhite);
+            
+            // Begin 2D mode with camera
             Raylib.BeginMode2D(camera);
 
             Raylib.DrawCircleV(player.TargetPosition, 5, Color.Red);
@@ -497,6 +531,7 @@ public class Program
 
             Raylib.EndMode2D();
 
+            // Draw UI elements directly to the render texture
             Raylib.DrawText($"Player Pos: {player.Position.X:F2}, {player.Position.Y:F2}", 10, 10, 20, Color.Black);
             Raylib.DrawText($"Player State: {player.CurrentState}", 10, 30, 20, Color.Black);
             Raylib.DrawText($"Blocks: {blocks.Count}", 10, 50, 20, Color.Black);
@@ -509,18 +544,43 @@ public class Program
 
             string scoreText = $"Earth: {stoneCounts[(int)StoneType.Earth]}";
             Vector2 scoreSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), scoreText, 30, 1);
-            float screenCenterX = Raylib.GetScreenWidth() / 2f;
+            float textCenterX = refWidth / 2f;
             Raylib.DrawText(
                 scoreText,
-                (int)(screenCenterX - scoreSize.X / 2),
-                Raylib.GetScreenHeight() - 50,
+                (int)(textCenterX - scoreSize.X / 2),
+                refHeight - 50,
                 30,
                 Color.DarkGray
             );
+            
+            // End drawing to render texture
+            Raylib.EndTextureMode();
+            
+            // Begin drawing to screen
+            Raylib.BeginDrawing();
+            Raylib.ClearBackground(Color.Black);
+            
+            // Draw render texture to screen with letterboxing
+            float scale = Math.Min(
+                (float)Raylib.GetScreenWidth() / refWidth,
+                (float)Raylib.GetScreenHeight() / refHeight
+            );
+            
+            Rectangle sourceRec = new Rectangle(0, 0, target.Texture.Width, -target.Texture.Height);
+            Rectangle destRec = new Rectangle(
+                (Raylib.GetScreenWidth() - (refWidth * scale)) * 0.5f,
+                (Raylib.GetScreenHeight() - (refHeight * scale)) * 0.5f,
+                refWidth * scale,
+                refHeight * scale
+            );
+            
+            Raylib.DrawTexturePro(target.Texture, sourceRec, destRec, new Vector2(0, 0), 0.0f, Color.White);
 
             Raylib.EndDrawing();
         }
 
+        // Unload render texture before closing
+        Raylib.UnloadRenderTexture(target);
         Raylib.CloseWindow();
     }
 
@@ -566,8 +626,9 @@ public class Program
 
     public static Vector2 GetMouseWorld()
     {
-        Vector2 screenMouse = Raylib.GetMousePosition();
-        return Raylib.GetScreenToWorld2D(screenMouse, camera);
+        // Use virtual mouse position for letterboxing
+        Vector2 virtualMouse = GetVirtualMousePosition();
+        return Raylib.GetScreenToWorld2D(virtualMouse, camera);
     }
 
     static void UpdateCamera(float dt)
@@ -628,7 +689,8 @@ public class Program
 
     static Vector2 GetMousePositionRef()
     {
-        Vector2 screenPos = Raylib.GetMousePosition();
-        return Raylib.GetScreenToWorld2D(screenPos, camera);
+        // Use virtual mouse position for letterboxing
+        Vector2 virtualMouse = GetVirtualMousePosition();
+        return Raylib.GetScreenToWorld2D(virtualMouse, camera);
     }
 }
