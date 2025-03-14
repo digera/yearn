@@ -7,18 +7,18 @@ using System.Text.Json;
 
 public class GameState
 {
-    public int[] StoneCounts { get; set; }
+    public int[] StoneCounts { get; set; } = Array.Empty<int>();
     public float DurabilityMultiplier { get; set; }
     public int YieldBonus { get; set; }
 
-    public List<MinerSaveData> Miners { get; set; }
-    public PlayerSaveData Player { get; set; }
+    public List<MinerSaveData> Miners { get; set; } = new List<MinerSaveData>();
+    public PlayerSaveData Player { get; set; } = new PlayerSaveData();
 
     // Save data for crushers.
-    public List<CrusherSaveData> Crushers { get; set; }
+    public List<CrusherSaveData> Crushers { get; set; } = new List<CrusherSaveData>();
 
     // Save data for stone piles.
-    public List<EarthPileSaveData> EarthPiles { get; set; }
+    public List<EarthPileSaveData> EarthPiles { get; set; } = new List<EarthPileSaveData>();
 
     public class MinerSaveData
     {

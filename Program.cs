@@ -129,7 +129,7 @@ public class Program
     public static int[] stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
     public static StoneType? DraggedStoneType = null;  // Track which stone type is being dragged
     public static Forge forge;  // Add forge instance
-    public static ShovelStation shovelStation; // Add shovel station instance
+    public static ShovelStation? shovelStation; // Add shovel station instance
     
     // Flag to track if window size is being adjusted
     private static bool isAdjustingWindowSize = false;

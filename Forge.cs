@@ -196,7 +196,6 @@ public class Pickaxe
     public bool IsCollected { get; private set; } = false;
     public bool IsExpired { get; private set; } = false;
     
-    private float lifetime = 30.0f; // Pickaxe disappears after this many seconds
     private float bounceTimer = 0;
     private const float BOUNCE_PERIOD = 1.0f;
     private float bounceHeight = 10.0f;
@@ -212,14 +211,6 @@ public class Pickaxe
     
     public void Update(float dt)
     {
-        // Update lifetime
-       // lifetime -= dt;
-     //   if (lifetime <= 0)
-     //   {
-     //       IsExpired = true;
-    //        return;
-  //      }
-        
         // Make the pickaxe bounce
         bounceTimer += dt;
         if (bounceTimer > BOUNCE_PERIOD)

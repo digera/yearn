@@ -1,4 +1,4 @@
-﻿using Raylib_cs;
+using Raylib_cs;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -30,9 +30,6 @@ public class Player
         Position = startPos;
         TargetPosition = startPos;
         this.caravan = caravan;
-        this.basePwr = basePwr; //do I need?
-
-
 
         pickaxeStats = new PickaxeStats(
             speed: 0.75f,
