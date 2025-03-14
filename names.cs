@@ -76,26 +76,53 @@ public struct Names
 }
 
 public enum StoneType
-    {
-    Earth,
-    Stone,
-    Hardstone,
-    Rock,
-    Marble,
-    Quartz,
-    Limestone,
-    Granite,
-    Sandstone,
-    Quartzite,
-    Obsidian,
-    Diamondstone,
-    Amethyst,
-    Sapphire,
-    Ruby,
-    Emerald,
-    Citrine,
-    Onyx,
-    Diamond
-    }
+{
+    Earth,          // The baseline: raw, unrefined dirt
+    Clay,           // Slightly more structured than Earth
+    Pebble,         // Small, basic rock fragments
+    Siltstone,      // Fine-grained sedimentary start
+    Sandstone,      // Common, gritty, and porous
+    Shale,          // Layered sedimentary rock
+    Limestone,      // Soft, calcium-rich sedimentary
+    Mudstone,       // Compact but unremarkable
+    Rock,           // Generic, everyday stone
+    Hardstone,      // A step up in durability
+    Basalt,         // Dark, volcanic, and tough
+    Slate,          // Thin, workable, metamorphic
+    Granite,        // Coarse, strong, igneous classic
+    Marble,         // Polished, metamorphic beauty
+    Quartzite,      // Hardened quartz-rich rock
+    Gneiss,         // Banded, high-pressure metamorphic
+    Schist,         // Shiny, flaky, and layered
+    Porphyry,       // Speckled igneous stone
+    Obsidian,       // Volcanic glass, sharp and sleek
+    Flint,          // Hard, spark-making sedimentary
+    Chert,          // Similar to flint, but finer
+    Jade,           // Tough, ornamental green stone
+    Serpentine,     // Smooth, greenish, and twisty
+    Travertine,     // Light, porous, and elegant
+    Onyx,           // Sleek, banded, and dark
+    Lapis,          // Deep blue semi-precious stone
+    Malachite,      // Vibrant green, swirly patterns
+    Turquoise,      // Blue-green desert gem
+    Agate,          // Colorful, banded chalcedony
+    Jasper,         // Opaque, earthy gemstone
+    Amethyst,       // Purple quartz beauty
+    Citrine,        // Golden-yellow quartz
+    Topaz,          // Durable, colorful gem
+    Garnet,         // Deep red and resilient
+    Aquamarine,     // Pale blue beryl gem
+    Sapphire,       // Brilliant blue corundum
+    Ruby,           // Fiery red corundum
+    Emerald,        // Lush green beryl
+    Opal,           // Iridescent, play-of-color gem
+    Moonstone,      // Ethereal, glowing feldspar
+    Sunstone,       // Warm, sparkling feldspar
+    Starstone,      // Fictional: shimmering with star-like flecks
+    Voidrock,       // Fictional: dark, energy-absorbing stone
+    Luminite,       // Fictional: faintly glowing rare mineral
+    Diamond,        // The pinnacle: hardest natural gem
+    Aetherstone     // Fictional: mystical, ultimate upgrade
+}
 
 

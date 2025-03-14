@@ -262,7 +262,7 @@ public class Program
         stoneCounts = new int[Enum.GetValues(typeof(StoneType)).Length];
         Vector2 playerStartPos = new Vector2(refWidth * 0.5f, refHeight * 0.8f);
         caravan = new Caravan(refWidth, refHeight);
-        crushers.Add(new Crusher(caravan, StoneType.Earth, StoneType.Stone, 100, 50, 50, 200, 0));
+        crushers.Add(new Crusher(caravan, StoneType.Earth, (StoneType)1, 100, 50, 50, 200, 0));
 
         player = new Player(playerStartPos, caravan);
         

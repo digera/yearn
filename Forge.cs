@@ -107,30 +107,8 @@ public class Forge
         size = size + (stoneLevel * 0.5f);
         miningPower = miningPower + (stoneLevel * 3);
         
-        // Determine color based on stone type
-        Color color = stoneType switch
-        {
-            StoneType.Earth => new Color(139, 69, 19, 255), // Brown
-            StoneType.Stone => new Color(169, 169, 169, 255), // Dark Gray
-            StoneType.Hardstone => new Color(105, 105, 105, 255), // Dim Gray
-            StoneType.Rock => new Color(128, 128, 128, 255), // Gray
-            StoneType.Marble => new Color(245, 245, 245, 255), // White Smoke
-            StoneType.Quartz => new Color(240, 255, 255, 255), // Azure
-            StoneType.Limestone => new Color(250, 240, 230, 255), // Linen
-            StoneType.Granite => new Color(105, 105, 105, 255), // Dim Gray
-            StoneType.Sandstone => new Color(244, 164, 96, 255), // Sandy Brown
-            StoneType.Quartzite => new Color(176, 224, 230, 255), // Powder Blue
-            StoneType.Obsidian => new Color(0, 0, 0, 255), // Black
-            StoneType.Diamondstone => new Color(185, 242, 255, 255), // Light Blue
-            StoneType.Amethyst => new Color(153, 102, 204, 255), // Medium Purple
-            StoneType.Sapphire => new Color(15, 82, 186, 255), // Blue
-            StoneType.Ruby => new Color(224, 17, 95, 255), // Ruby Red
-            StoneType.Emerald => new Color(80, 200, 120, 255), // Emerald Green
-            StoneType.Citrine => new Color(228, 208, 10, 255), // Yellow
-            StoneType.Onyx => new Color(53, 56, 57, 255), // Dark Gray
-            StoneType.Diamond => new Color(185, 242, 255, 255), // Light Blue
-            _ => new Color(255, 255, 255, 255) // White (default)
-        };
+        // Use the StoneColorGenerator to determine color based on stone type
+        Color color = StoneColorGenerator.GetColor(stoneType);
         
         return new PickaxeStats(speed, size, miningPower, color);
     }

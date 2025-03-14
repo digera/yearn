@@ -108,73 +108,10 @@ public class ShovelStation
         speed += stoneValue * 0.1f;
         
         // Capacity increases with stone value
-        capacity += stoneValue * 5.0f;
+        capacity += stoneValue * 10.0f;
         
         // Determine color based on stone type
-        Color color;
-        switch (stoneType)
-        {
-            case StoneType.Earth:
-                color = new Color(139, 69, 19, 255); // Brown
-                break;
-            case StoneType.Stone:
-                color = new Color(169, 169, 169, 255); // Dark gray
-                break;
-            case StoneType.Hardstone:
-                color = new Color(105, 105, 105, 255); // Dim gray
-                break;
-            case StoneType.Rock:
-                color = new Color(128, 128, 128, 255); // Gray
-                break;
-            case StoneType.Marble:
-                color = new Color(245, 245, 245, 255); // White smoke
-                break;
-            case StoneType.Quartz:
-                color = new Color(255, 250, 250, 255); // Snow
-                break;
-            case StoneType.Limestone:
-                color = new Color(230, 230, 230, 255); // Light gray
-                break;
-            case StoneType.Granite:
-                color = new Color(190, 190, 190, 255); // Gray
-                break;
-            case StoneType.Sandstone:
-                color = new Color(244, 164, 96, 255); // Sandy brown
-                break;
-            case StoneType.Quartzite:
-                color = new Color(255, 255, 240, 255); // Ivory
-                break;
-            case StoneType.Obsidian:
-                color = new Color(0, 0, 0, 255); // Black
-                break;
-            case StoneType.Diamondstone:
-                color = new Color(185, 242, 255, 255); // Light blue
-                break;
-            case StoneType.Amethyst:
-                color = new Color(153, 102, 204, 255); // Medium purple
-                break;
-            case StoneType.Sapphire:
-                color = new Color(0, 0, 255, 255); // Blue
-                break;
-            case StoneType.Ruby:
-                color = new Color(255, 0, 0, 255); // Red
-                break;
-            case StoneType.Emerald:
-                color = new Color(0, 255, 0, 255); // Green
-                break;
-            case StoneType.Citrine:
-                color = new Color(255, 255, 0, 255); // Yellow
-                break;
-            case StoneType.Onyx:
-                color = new Color(0, 0, 0, 255); // Black
-                break;
-            case StoneType.Diamond:
-                color = new Color(185, 242, 255, 255); // Light blue
-                break;
-            default:
-                color = new Color(255, 255, 255, 255); // White
-                break;
-        }
+        Color color = StoneColorGenerator.GetColor(stoneType);
         
         return new ShovelStats(speed, capacity, color);
     }
@@ -187,13 +124,13 @@ public class ShovelStation
         Raylib.DrawRectangle((int)pos.X, (int)pos.Y, Width, Height, color);
         
         // Add some details to the station
-        Color darkBlue = new Color(25, 25, 112, 255);
+        Color darkBlue = new Color((byte)25, (byte)25, (byte)112, (byte)255);
         Raylib.DrawRectangle((int)pos.X + 5, (int)pos.Y + 5, Width - 10, Height - 10, darkBlue);
         
         // Draw a glowing effect if the station is active
         if (canCreateShovel)
         {
-            Color blueGlow = new Color(100, 149, 237, 150);
+            Color blueGlow = new Color((byte)100, (byte)149, (byte)237, (byte)150);
             Raylib.DrawRectangle((int)pos.X + 15, (int)pos.Y + 15, Width - 30, Height - 30, blueGlow);
         }
         
