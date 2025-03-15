@@ -134,7 +134,10 @@ public class EarthPile
             // Calculate pile size based on resource count (with a reasonable cap)
             // Only expand on X axis, keep Y fixed
             int resourceCount = Program.stoneCounts[(int)StoneType];
-            float sizeMultiplier = Math.Min(1.0f + (resourceCount / 200.0f), 2.5f);
+            // Apply logarithmic scaling to show difference between orders of magnitude (100, 1000, 10000)
+            float sizeMultiplier = 1.0f + (float)(Math.Log10(resourceCount + 1) * 0.3f);
+            // Cap maximum size at reasonable limit
+            sizeMultiplier = Math.Min(sizeMultiplier, 2.5f);
             int effectiveWidth = (int)(Width * sizeMultiplier);
             int effectiveHeight = Height; // Keep Y size fixed
             
@@ -170,6 +173,7 @@ public class EarthPile
             Random random = new Random(StoneType.GetHashCode()); // Consistent random pattern for each stone type
             int numStones = Math.Min(resourceCount / 5, 20); // Cap at 20 stones for performance
             
+            // Create a more natural layering of stones
             for (int i = 0; i < numStones; i++)
             {
                 // Vary the stone colors slightly
@@ -180,11 +184,15 @@ public class EarthPile
                     (byte)255
                 );
                 
-                // Random position within the oval area
+                // Random position with logical layering effect - stones at the bottom have higher Y values
                 float angle = random.Next(0, 360) * MathF.PI / 180;
                 float radiusVariation = random.Next(70, 95) / 100f; // 70-95% of max radius
+                
+                // Create layering effect - higher stones tend to be in the middle (bell curve distribution)
+                float heightFactor = 1.0f - (MathF.Abs(MathF.Cos(angle)) * 0.5f);
+                
                 int stoneX = (int)(Position.X + xOffset + (effectiveWidth / 2) + (effectiveWidth / 2) * radiusVariation * MathF.Cos(angle));
-                int stoneY = (int)(Position.Y + (effectiveHeight / 2) + (effectiveHeight / 2) * radiusVariation * MathF.Sin(angle));
+                int stoneY = (int)(Position.Y + (effectiveHeight / 2) + (effectiveHeight / 2) * radiusVariation * MathF.Sin(angle) * heightFactor);
                 int stoneSize = random.Next(5, 12);
                 
                 // Draw the individual stone

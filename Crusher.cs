@@ -34,7 +34,7 @@ public class Crusher
     private readonly float conversionUpgradeMultiplier = 1.2f;
 
     // Tier upgrade cost - cost to create the next tier crusher
-    private readonly int tierUpgradeCost = 50;
+    private readonly int TierUpgradeCost = 50;
     public bool CanCreateNextTier => (int)OutputType < Enum.GetValues(typeof(StoneType)).Length - 1;
 
     public int ID { get; set; }
@@ -157,6 +157,9 @@ public class Crusher
                       $"{ConversionAmount}/s";
         Raylib.DrawText(text, (int)pos.X + 8, (int)pos.Y + boxHeight - 28, 10, textColor);
 
+        // Get the InfoPanel instance
+        InfoPanel infoPanel = InfoPanel.GetInstance();
+
         // Draw the two upgrade buttons with improved visuals and symbols
         isHoveringHopperButton = DrawUpgradeButton(pos, 0, HopperUpgradeCost.ToString(), "⬆H", inputColor, mousePos);
         isHoveringConversionButton = DrawUpgradeButton(pos, 1, ConversionUpgradeCost.ToString(), "⬆S", outputColor, mousePos);
@@ -172,132 +175,65 @@ public class Crusher
             isHoveringNextTierButton = false;
         }
         
-        // Draw tooltips if hovering over buttons
-        DrawTooltips(pos, mousePos);
+        // Update InfoPanel content based on which button is being hovered
+        UpdateInfoPanel(pos, infoPanel);
     }
     
-    // Draw tooltips for buttons when hovered
-    private void DrawTooltips(Vector2 pos, Vector2 mousePos)
+    // Update the InfoPanel content based on which button is being hovered
+    private void UpdateInfoPanel(Vector2 pos, InfoPanel infoPanel)
     {
-        if (isHoveringHopperButton || isHoveringConversionButton || isHoveringNextTierButton)
+        if (isHoveringHopperButton)
         {
-            // Draw the tooltip directly on the right side of the caravan
-            // Get caravan dimensions
-            float caravanWidth = caravan.width;
-            float caravanY = caravan.Y;
+            // Calculate button position for connecting line
+            int buttonX = (int)pos.X + 0 * (buttonSize + buttonMargin) + buttonSize/2;
+            int buttonY = (int)pos.Y + boxHeight + buttonSize/2;
+            Vector2 buttonPos = new Vector2(buttonX, buttonY);
+            Vector2 screenPos = Raylib.GetWorldToScreen2D(buttonPos, Program.camera);
             
-            // Position the tooltip in the lower right area of the caravan
-            // Based on the yellow square in the screenshot
-            float tooltipX = caravanWidth * 0.7f;
-            float tooltipY = caravanY + caravan.height * 0.3f; // Move it down to the lower part
+            // Set content for hopper upgrade
+            infoPanel.SetTitle("UPGRADE HOPPER");
+            infoPanel.ClearContent();
+            infoPanel.AddContentLine($"Increases storage");
+            infoPanel.AddContentLine($"Cost: {HopperUpgradeCost}");
+            infoPanel.AddContentLine($"Current: {Hopper}");
+            infoPanel.headerColor = StoneColorGenerator.GetColor(InputType);
+            infoPanel.ShowWithConnectingLine(screenPos);
+        }
+        else if (isHoveringConversionButton)
+        {
+            // Calculate button position for connecting line
+            int buttonX = (int)pos.X + 1 * (buttonSize + buttonMargin) + buttonSize/2;
+            int buttonY = (int)pos.Y + boxHeight + buttonSize/2;
+            Vector2 buttonPos = new Vector2(buttonX, buttonY);
+            Vector2 screenPos = Raylib.GetWorldToScreen2D(buttonPos, Program.camera);
             
-            // Make the tooltip larger
-            int tooltipWidth = 300;
-            int tooltipHeight = 150;
+            // Set content for conversion upgrade
+            infoPanel.SetTitle("UPGRADE SPEED");
+            infoPanel.ClearContent();
+            infoPanel.AddContentLine($"Faster conversion");
+            infoPanel.AddContentLine($"Cost: {ConversionUpgradeCost}");
+            infoPanel.AddContentLine($"Rate: {ConversionAmount:F1}/s");
+            infoPanel.headerColor = StoneColorGenerator.GetColor(OutputType);
+            infoPanel.ShowWithConnectingLine(screenPos);
+        }
+        else if (isHoveringNextTierButton)
+        {
+            StoneType nextTierType = (StoneType)((int)OutputType + 1);
             
-            // Draw tooltip background with semi-transparent dark background
-            Raylib.DrawRectangle(
-                (int)tooltipX, 
-                (int)tooltipY, 
-                tooltipWidth, 
-                tooltipHeight, 
-                new Color((byte)0, (byte)0, (byte)0, (byte)180)
-            );
+            // Calculate button position for connecting line
+            int buttonX = (int)pos.X + 2 * (buttonSize + buttonMargin) + tierButtonSize/2;
+            int buttonY = (int)pos.Y + boxHeight + tierButtonSize/2;
+            Vector2 buttonPos = new Vector2(buttonX, buttonY);
+            Vector2 screenPos = Raylib.GetWorldToScreen2D(buttonPos, Program.camera);
             
-            // Draw tooltip border
-            Raylib.DrawRectangleLines(
-                (int)tooltipX, 
-                (int)tooltipY, 
-                tooltipWidth, 
-                tooltipHeight, 
-                Color.White
-            );
-            
-            // Prepare tooltip text based on which button is being hovered
-            string tooltipTitle = "";
-            string tooltipDescription = "";
-            string tooltipCost = "";
-            string tooltipCurrent = "";
-            Color tooltipColor = Color.White;
-            
-            if (isHoveringHopperButton)
-            {
-                tooltipTitle = "UPGRADE HOPPER";
-                tooltipDescription = "Increases storage capacity for input resources";
-                tooltipCost = $"Cost: {HopperUpgradeCost} {OutputResourceName}";
-                tooltipCurrent = $"Current capacity: {Hopper}";
-                tooltipColor = StoneColorGenerator.GetColor(InputType);
-            }
-            else if (isHoveringConversionButton)
-            {
-                tooltipTitle = "UPGRADE CONVERSION SPEED";
-                tooltipDescription = "Increases the rate at which resources are converted";
-                tooltipCost = $"Cost: {ConversionUpgradeCost} {OutputResourceName}";
-                tooltipCurrent = $"Current rate: {ConversionAmount}/s";
-                tooltipColor = StoneColorGenerator.GetColor(OutputType);
-            }
-            else if (isHoveringNextTierButton)
-            {
-                StoneType nextTierType = (StoneType)((int)OutputType + 1);
-                tooltipTitle = "CREATE NEXT TIER CRUSHER";
-                tooltipDescription = $"Creates a new crusher that converts {OutputType} to {nextTierType}";
-                tooltipCost = $"Cost: {tierUpgradeCost} {OutputResourceName}";
-                tooltipCurrent = "";
-                tooltipColor = StoneColorGenerator.GetColor(nextTierType);
-            }
-            
-            // Draw colored header bar
-            Raylib.DrawRectangle(
-                (int)tooltipX, 
-                (int)tooltipY, 
-                tooltipWidth, 
-                30, 
-                tooltipColor
-            );
-            
-            // Choose text color based on header color brightness
-            Color headerTextColor = (tooltipColor.R + tooltipColor.G + tooltipColor.B > 380) ? 
-                new Color((byte)20, (byte)20, (byte)20, (byte)255) : 
-                new Color((byte)230, (byte)230, (byte)230, (byte)255);
-            
-            // Draw tooltip text with larger font sizes
-            Raylib.DrawText(tooltipTitle, (int)tooltipX + 10, (int)tooltipY + 8, 20, headerTextColor);
-            Raylib.DrawText(tooltipDescription, (int)tooltipX + 10, (int)tooltipY + 40, 16, Color.White);
-            Raylib.DrawText(tooltipCost, (int)tooltipX + 10, (int)tooltipY + 70, 18, Color.White);
-            
-            if (!string.IsNullOrEmpty(tooltipCurrent))
-            {
-                Raylib.DrawText(tooltipCurrent, (int)tooltipX + 10, (int)tooltipY + 100, 18, Color.White);
-            }
-            
-            // Draw a small indicator line from the button to the tooltip
-            if (isHoveringHopperButton || isHoveringConversionButton)
-            {
-                int buttonIndex = isHoveringHopperButton ? 0 : 1;
-                int buttonX = (int)pos.X + buttonIndex * (buttonSize + buttonMargin) + buttonSize/2;
-                int buttonY = (int)pos.Y + boxHeight + buttonSize/2;
-                
-                Raylib.DrawLine(
-                    buttonX,
-                    buttonY,
-                    (int)tooltipX,
-                    (int)tooltipY + tooltipHeight/2,
-                    Color.White
-                );
-            }
-            else if (isHoveringNextTierButton)
-            {
-                int buttonX = (int)pos.X + 2 * (buttonSize + buttonMargin) + tierButtonSize/2;
-                int buttonY = (int)pos.Y + boxHeight + tierButtonSize/2;
-                
-                Raylib.DrawLine(
-                    buttonX,
-                    buttonY,
-                    (int)tooltipX,
-                    (int)tooltipY + tooltipHeight/2,
-                    Color.White
-                );
-            }
+            // Set content for next tier crusher
+            infoPanel.SetTitle("NEW CRUSHER");
+            infoPanel.ClearContent();
+            infoPanel.AddContentLine($"{OutputType} to");
+            infoPanel.AddContentLine($"{nextTierType}");
+            infoPanel.AddContentLine($"Cost: {TierUpgradeCost}");
+            infoPanel.headerColor = StoneColorGenerator.GetColor(nextTierType);
+            infoPanel.ShowWithConnectingLine(screenPos);
         }
     }
 
@@ -324,8 +260,8 @@ public class Crusher
         );
         
         // Check if mouse is hovering over this button
-        bool isHovering = mousePos.X >= x && mousePos.X <= x + buttonSize &&
-                          mousePos.Y >= y && mousePos.Y <= y + buttonSize;
+        Rectangle buttonRect = new Rectangle(x, y, buttonSize, buttonSize);
+        bool isHovering = Raylib.CheckCollisionPointRec(mousePos, buttonRect);
         
         // If hovering, make the button brighter
         if (isHovering)
@@ -387,8 +323,8 @@ public class Crusher
         );
         
         // Check if mouse is hovering over this button
-        bool isHovering = mousePos.X >= x && mousePos.X <= x + tierButtonSize &&
-                          mousePos.Y >= y && mousePos.Y <= y + tierButtonSize;
+        Rectangle buttonRect = new Rectangle(x, y, tierButtonSize, tierButtonSize);
+        bool isHovering = Raylib.CheckCollisionPointRec(mousePos, buttonRect);
         
         // If hovering, make the button brighter
         if (isHovering)
@@ -533,7 +469,7 @@ public class Crusher
     // Method to create the next tier crusher
     public bool CreateNextTierCrusher()
     {
-        if (!CanCreateNextTier || Program.stoneCounts[(int)OutputType] < tierUpgradeCost)
+        if (!CanCreateNextTier || Program.stoneCounts[(int)OutputType] < TierUpgradeCost)
             return false;
             
         // Check if a crusher for the next tier already exists
@@ -542,7 +478,7 @@ public class Crusher
             return false;
             
         // Consume resources
-        Program.stoneCounts[(int)OutputType] -= tierUpgradeCost;
+        Program.stoneCounts[(int)OutputType] -= TierUpgradeCost;
         
         // Calculate the next tier crusher's input and output types
         StoneType nextInputType = OutputType;

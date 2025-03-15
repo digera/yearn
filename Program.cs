@@ -112,8 +112,8 @@ public class Program
     static byte lastBaseBlue = 100;
     private static SaveSystem saveSystem = new SaveSystem();
     public static List<Block> blocks = new List<Block>();
-    public static Caravan caravan;
-    public static Player player;
+    public static Caravan caravan = null!; 
+    public static Player player = null!; 
     public static Camera2D camera;
     //public static int Earth = 0;
     static float caravanY;
@@ -130,6 +130,7 @@ public class Program
     public static StoneType? DraggedStoneType = null;  // Track which stone type is being dragged
     public static Forge? forge;  // Add forge instance
     public static ShovelStation? shovelStation; // Add shovel station instance
+    public static InfoPanel? infoPanel; // Add InfoPanel instance
     
     // Flag to track if window size is being adjusted
     private static bool isAdjustingWindowSize = false;
@@ -274,6 +275,9 @@ public class Program
         
         // Initialize the shovel station
         shovelStation = new ShovelStation(caravan);
+        
+        // Initialize the InfoPanel
+        infoPanel = InfoPanel.GetInstance();
 
         camera = new Camera2D
         {
@@ -439,6 +443,9 @@ public class Program
                 // Use virtual mouse position instead
                 Vector2 mouseWorld = GetMouseWorld();
 
+                // Reset InfoPanel state at the beginning of each frame
+                infoPanel.Hide();
+
                 // Process miner clicks (each miner is processed twice in separate passes)
                 foreach (var miner in miners)
                 {
@@ -598,6 +605,12 @@ public class Program
                 30,
                 Color.DarkGray
             );
+            
+            // Draw the InfoPanel (should be drawn last so it appears on top of everything else)
+            if (infoPanel != null)
+            {
+                infoPanel.Draw();
+            }
             
             Raylib.EndDrawing();
         }
