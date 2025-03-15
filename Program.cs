@@ -207,15 +207,18 @@ public class Program
     // New method to calculate virtual mouse position
     public static Vector2 GetVirtualMousePosition()
     {
-        // Since we're maintaining aspect ratio with window size,
-        // we can just scale the mouse position directly
-        Vector2 mouse = Raylib.GetMousePosition();
-        Vector2 virtualMouse = new Vector2(
-            mouse.X * refWidth / Raylib.GetScreenWidth(),
-            mouse.Y * refHeight / Raylib.GetScreenHeight()
-        );
+        // Simply return the actual mouse position
+        // The camera already handles the scaling
+        return Raylib.GetMousePosition();
+    }
+
+    public static Vector2 GetMouseWorld()
+    {
+        // Get the actual mouse position in screen space
+        Vector2 mousePos = Raylib.GetMousePosition();
         
-        return virtualMouse;
+        // Convert screen coordinates to world coordinates using the camera
+        return Raylib.GetScreenToWorld2D(mousePos, camera);
     }
 
     public static void CheckAndRemoveDestroyedBlocks()
@@ -426,7 +429,7 @@ public class Program
             if (Raylib.IsMouseButtonDown(MouseButton.Left))
             {
                 // Use virtual mouse position instead
-                Vector2 mouseWorld = GetMousePositionRef();
+                Vector2 mouseWorld = GetMouseWorld();
                 player.SetTarget(mouseWorld);
             }
             // oh my god send help -- update, jippity pulled through
@@ -434,7 +437,7 @@ public class Program
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
                 // Use virtual mouse position instead
-                Vector2 mouseWorld = GetMousePositionRef();
+                Vector2 mouseWorld = GetMouseWorld();
 
                 // Process miner clicks (each miner is processed twice in separate passes)
                 foreach (var miner in miners)
@@ -642,13 +645,6 @@ public class Program
         nextSetStartY = startY - (newRows - 1) * blockSize;
     }
 
-    public static Vector2 GetMouseWorld()
-    {
-        // Use virtual mouse position for letterboxing
-        Vector2 virtualMouse = GetVirtualMousePosition();
-        return Raylib.GetScreenToWorld2D(virtualMouse, camera);
-    }
-
     static void UpdateCamera(float dt)
     {
         float smoothSpeed = 5f * dt;
@@ -703,12 +699,5 @@ public class Program
         Vector2 center = new Vector2(block.X + block.Size * 0.5f, block.Y + block.Size * 0.5f);
         float dist = Vector2.Distance(player.Position, center);
         return dist <= Player.MINING_RANGE;
-    }
-
-    static Vector2 GetMousePositionRef()
-    {
-        // Use virtual mouse position for letterboxing
-        Vector2 virtualMouse = GetVirtualMousePosition();
-        return Raylib.GetScreenToWorld2D(virtualMouse, camera);
     }
 }
